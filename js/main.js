@@ -58,17 +58,6 @@ window.addEventListener('resize', () => {
     drops = Array(columns).fill(1);
 });
 
-// Останавливаем матрицу, когда она не видна (экономит CPU)
-const heroSection = document.querySelector('.hero');
-const matrixObserver = new IntersectionObserver((entries) => {
-    matrixRunning = entries[0].isIntersecting;
-    if (matrixRunning && !lastTime) {
-        lastTime = performance.now();
-        requestAnimationFrame(matrixLoop);
-    }
-});
-matrixObserver.observe(heroSection);
-
 // ============================================
 // SCROLL INDICATOR (fixed внизу экрана)
 // ============================================
