@@ -32,3 +32,6 @@ yarn-error.log*
 # Other
 *.orig
 *.bak
+
+# Resume files
+resume/35.jpg

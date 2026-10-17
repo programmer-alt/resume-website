@@ -44,7 +44,7 @@
 ## 📁 Структура
 
 ```
-portfolio/
+resume-website/
 ├── index.html          # Главная страница
 ├── css/
 │   └── style.css       # Стили
@@ -52,6 +52,9 @@ portfolio/
 │   └── main.js         # JavaScript
 ├── images/
 │   └── avatar.jpg      # Фото аватарки
+├── resume/
+│   └── 35.jpg          # Резюме (PDF)
+├── package.json        # Зависимости
 └── README.md           # Документация
 ```
 

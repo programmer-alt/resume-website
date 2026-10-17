@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Банковский Вадим — Frontend Developer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Hero-секция -->
+    <header class="hero">
+        <canvas class="matrix-canvas" id="matrixCanvas"></canvas>
+        <div class="hero-container">
+            <div class="hero-profile">
+                <div class="hero-photo">
+                    <img src="images/avatar.jpg" alt="Фото Вадима Банковского">
+                </div>
+                <div class="hero-info">
+                    <h1 class="hero-name">Банковский Вадим Юрьевич</h1>
+                    <h2 class="hero-title"></h2>
+                    <div class="hero-tech">
+                        <span class="tech-badge">React</span>
+                        <span class="tech-badge">TypeScript</span>
+                        <span class="tech-badge">Node.js</span>
+                    </div>
+                    <div class="hero-actions">
+                        <a href="#projects" class="btn btn-primary">Смотреть проекты</a>
+                        <a href="#contact" class="btn btn-secondary">Связаться</a>
+                    </div>
+                    <div class="hero-social">
+                        <a href="https://github.com/programmer-alt" class="social-link" aria-label="GitHub" target="_blank">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>Прокрути вниз</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </header>
+
+    <main>
+        <!-- О себе -->
+        <section class="section" id="about">
+            <div class="container">
+                <h2 class="section-title">О себе</h2>
+                <div class="about-content">
+                    <p class="about-text">
+                        Фронтенд-разработчик, специализируюсь на создании интерфейсов 
+                        с использованием React и TypeScript. В своих проектах также 
+                        реализую серверную часть на Node.js: работа с базами данных, 
+                        WebSocket-соединения, платежные интеграции и аутентификация. 
+                        Активно применяю современные AI-инструменты (LLM) для ускорения 
+                        разработки и изучения новых технологий.
+                    </p>
+                    <div class="about-facts">
+                        <div class="fact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Россия</span>
+                        </div>
+                        <div class="fact-item">
+                            <i class="fas fa-laptop-house"></i>
+                            <span>Готов к удалённой работе</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Навыки -->
+        <section class="section" id="skills">
+            <div class="container">
+                <h2 class="section-title">Навыки</h2>
+                <div class="skills-grid">
+                    <div class="skill-card">
+                        <div class="skill-header">
+                            <i class="fas fa-code"></i>
+                            <h3>Frontend</h3>
+                        </div>
+                        <ul class="skill-list">
+                            <li>HTML5 / CSS3</li>
+                            <li>JavaScript (ES6+)</li>
+                            <li>TypeScript</li>
+                            <li>React</li>
+                            <li>Tailwind CSS</li>
+                            <li>Zustand / React Router</li>
+                            <li>Vite</li>
+                            <li>Socket.io-client</li>
+                        </ul>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-header">
+                            <i class="fas fa-server"></i>
+                            <h3>Backend (Node.js)</h3>
+                        </div>
+                        <ul class="skill-list">
+                            <li>Node.js</li>
+                            <li>Express</li>
+                            <li>Socket.io (WebSocket)</li>
+                            <li>Prisma ORM</li>
+                            <li>PostgreSQL</li>
+                            <li>JWT / Keycloak</li>
+                            <li>Stripe API</li>
+                            <li>Prometheus (метрики)</li>
+                        </ul>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-header">
+                            <i class="fas fa-robot"></i>
+                            <h3>AI-инструменты</h3>
+                        </div>
+                        <ul class="skill-list">
+                            <li>DeepSeek</li>
+                            <li>Qwen</li>
+                            <li>GigaCode</li>
+                            <li>Prompt Engineering</li>
+                            <li>AI-код-ревью</li>
+                            <li>Генерация тестов с помощью AI</li>
+                            <li>Автоматизация разработки</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Проекты -->
+        <section class="section" id="projects">
+            <div class="container">
+                <h2 class="section-title">Проекты</h2>
+                <div class="projects-grid">
+                    
+                    <!-- Проект 1: Auction Marketplace -->
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div class="project-placeholder">
+                                <i class="fas fa-gavel"></i>
+                            </div>
+                        </div>
+                        <div class="project-info">
+                            <h3>Global Auction Marketplace</h3>
+                            <p>Международная торговая площадка для аукционов с торгами в реальном времени и платежами через Stripe.</p>
+                            <div class="project-tech">
+                                <span>React 19</span>
+                                <span>TypeScript</span>
+                                <span>Node.js</span>
+                                <span>Express</span>
+                                <span>Prisma</span>
+                                <span>PostgreSQL</span>
+                                <span>Stripe API</span>
+                                <span>Socket.io</span>
+                                <span>Prometheus</span>
+                                <span>Zustand</span>
+                            </div>
+                            <div class="project-links">
+                                <a href="https://github.com/programmer-alt/auction-marketplace" class="project-link" target="_blank">
+                                    <i class="fab fa-github"></i> GitHub
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Проект 2: Keycloak Messenger -->
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div class="project-placeholder">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                        </div>
+                        <div class="project-info">
+                            <h3>Keycloak Messenger</h3>
+                            <p>Веб-мессенджер с корпоративной аутентификацией через Keycloak SSO и обменом сообщениями в реальном времени.</p>
+                            <div class="project-tech">
+                                <span>React 19</span>
+                                <span>TypeScript</span>
+                                <span>Node.js</span>
+                                <span>Express</span>
+                                <span>Socket.io</span>
+                                <span>Keycloak SSO</span>
+                                <span>JWT</span>
+                                <span>Vite</span>
+                                <span>CSS3</span>
+                                <span>Nodemon</span>
+                            </div>
+                            <div class="project-links">
+                                <a href="https://github.com/programmer-alt/Keycloak-messenger" class="project-link" target="_blank">
+                                    <i class="fab fa-github"></i> GitHub
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Образование -->
+        <section class="section" id="education">
+            <div class="container">
+                <h2 class="section-title">Образование</h2>
+                <div class="education-grid">
+                    <div class="education-card">
+                        <div class="education-year">2011</div>
+                        <h3>Кубанский государственный университет</h3>
+                        <p class="education-faculty">Прикладная информатика в экономике</p>
+                        <p class="education-degree">Информатик-экономист</p>
+                        <p class="education-format">Высшее</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Контакты -->
+        <section class="section" id="contact">
+            <div class="container">
+                <h2 class="section-title">Контакты</h2>
+                <div class="contact-grid">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h3>Email</h3>
+                            <a href="mailto:modstils88@mail.ru">modstils88@mail.ru</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h3>Телефон</h3>
+                            <a href="tel:+79123456789">+7(9**)********</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fab fa-github"></i>
+                        <div>
+                            <h3>GitHub</h3>
+                            <a href="https://github.com/programmer-alt" target="_blank">programmer-alt</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <button class="btn-download-cv" onclick="window.print()" aria-label="Скачать CV">
+                <i class="fas fa-file-pdf"></i>
+                <span>Скачать резюме в PDF</span>
+            </button>
+            <p>&copy; 2026 Банковский Вадим. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
