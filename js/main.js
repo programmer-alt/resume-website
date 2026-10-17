@@ -59,9 +59,17 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================
-// SCROLL INDICATOR (fixed внизу экрана)
+// SCROLL INDICATOR (скрывается при скролле)
 // ============================================
 const scrollIndicator = document.querySelector('.scroll-indicator');
+
+let scrollIndicatorHidden = false;
+window.addEventListener('scroll', () => {
+    if (!scrollIndicatorHidden && window.scrollY > 100) {
+        scrollIndicator.classList.add('hidden');
+        scrollIndicatorHidden = true;
+    }
+});
 
 // ============================================
 // SCROLL PROGRESS BAR
