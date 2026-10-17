@@ -779,6 +779,17 @@ ul {
     .hero-photo {
         width: 250px;
         height: 300px;
+        margin-left: 0;
+    }
+    
+    .scroll-indicator {
+        left: auto;
+        right: 20px;
+        bottom: 20px;
+    }
+    
+    .scroll-indicator span {
+        font-size: 11px;
     }
     
     .hero-name {
@@ -831,6 +842,17 @@ ul {
     .hero-photo {
         width: 200px;
         height: 240px;
+        margin-left: 0;
+    }
+    
+    .scroll-indicator {
+        left: auto;
+        right: 210px;
+        bottom: 15px;
+    }
+    
+    .scroll-indicator span {
+        font-size: 10px;
     }
     
     .section-title {
