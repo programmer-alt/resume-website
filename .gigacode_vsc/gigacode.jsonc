@@ -1,0 +1,93 @@
+{
+  "$schema": "https://app.gigacode.ai/schemas/config.json",
+  "instructions": [".gigacode_vsc/rules/*.md"],
+
+  "skills": {
+    "paths": ["./.gigacode_vsc/skills", "./skills"]
+  },
+
+  "mcpServers": {
+    "narsil": {
+      "disabled": false,
+      "timeout": 60,
+      "alwaysAllow": [
+        "check_owasp_top10",
+        "get_security_summary",
+        "get_project_structure",
+        "search_code",
+        "get_excerpt",
+        "find_duplicates",
+        "get_symbol_definition",
+        "list_repos",
+        "get_file",
+        "find_references",
+        "check_dependencies",
+        "get_dependencies",
+        "get_import_graph",
+        "hybrid_search",
+        "find_symbols",
+        "find_symbol_usages",
+        "go_to_definition",
+        "workspace_symbol_search",
+        "scan_security",
+        "find_injection_vulnerabilities",
+        "get_call_graph",
+        "get_callers",
+        "get_callees",
+        "get_data_flow",
+        "get_control_flow",
+        "get_complexity",
+        "get_function_hotspots",
+        "get_export_map",
+        "find_call_path",
+        "find_similar_code",
+        "get_chunks",
+        "find_dead_code",
+        "find_similar_to_symbol"
+      ],
+      "disabledTools": [],
+      "type": "stdio",
+      "command": "C:\\Users\\ASUS\\AppData\\Local\\Programs\\narsil-mcp\\narsil-mcp.exe",
+      "args": [
+        "--repos",
+        "C:\\Users\\ASUS\\Documents\\Global_Auction_Marketplace"
+      ]
+    },
+    "playwright": {
+      "disabled": false,
+      "timeout": 60,
+      "alwaysAllow": [],
+      "disabledTools": [],
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"],
+      "cwd": "D:\\portfolio"
+    },
+
+    "clear-thought": {
+      "disabled": false,
+      "timeout": 60,
+      "alwaysAllow": [
+        "sequentialthinking",
+        "metacognitivemonitoring",
+        "scientificmethod",
+        "debuggingapproach",
+        "mentalmodel",
+        "decisionframework",
+        "structuredargumentation",
+        "visualreasoning",
+        "collaborativereasoning"
+      ],
+      "disabledTools": [],
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@waldzellai/clear-thought"],
+      "cwd": "D:\\portfolio"
+    },
+    "neurodivergent_memory": {
+      "command": "npx",
+      "args": ["-y", "neurodivergent-memory@latest"],
+      "cwd": "D:\\portfolio"
+    },
+  }
+}
