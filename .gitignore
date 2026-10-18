@@ -35,3 +35,6 @@ yarn-error.log*
 
 # Resume files
 resume/35.jpg
+
+# GigaCode config (local only)
+.gigacode_vsc/
