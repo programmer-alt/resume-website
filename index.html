@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Портфолио фронтенд-разработчика Вадима Карагодина: проекты на React, TypeScript и Node.js.">
     <title>Карагодин Вадим — Frontend Developer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +14,7 @@
 <body>
     <!-- Hero-секция -->
     <header class="hero">
-        <canvas class="matrix-canvas" id="matrixCanvas"></canvas>
+        <canvas class="matrix-canvas" id="matrixCanvas" aria-hidden="true"></canvas>
         <div class="hero-container">
             <div class="hero-profile">
                 <div class="hero-photo">
@@ -32,16 +33,16 @@
                         <a href="#contact" class="btn btn-secondary">Связаться</a>
                     </div>
                     <div class="hero-social">
-                        <a href="https://github.com/programmer-alt" class="social-link" aria-label="GitHub" target="_blank">
+                        <a href="https://github.com/programmer-alt" class="social-link" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
                             <i class="fab fa-github"></i>
                         </a>
                     </div>
+                    <div class="scroll-indicator">
+                        <span>Прокрути вниз</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="scroll-indicator">
-            <span>Прокрути вниз</span>
-            <i class="fas fa-chevron-down"></i>
         </div>
     </header>
 
@@ -84,56 +85,37 @@
                             <h3>Frontend</h3>
                         </div>
                         <ul class="skill-list">
-                            <li>HTML5 / CSS3</li>                        
-                            <li>TypeScript</li>
-                            <li>React</li>
-                            <li>Vite</li>
+                            <li>HTML5 / CSS3, Адаптивная верстка</li>                        
+                            <li>TypeScript, React 19</li>
+                            <li>Vite, Zustand (state management)</li>
+                            <li>Socket.io Client, WebSockets</li>
+                            <li>Zod (validation), REST API</li>
                         </ul>
                     </div>
                     <div class="skill-card">
                         <div class="skill-header">
                             <i class="fas fa-server"></i>
-                            <h3>Backend </h3>
+                            <h3>Backend & DB</h3>
                         </div>
                         <ul class="skill-list">
-                            <li>Node.js</li>
+                            <li>Node.js, Express.js</li>
+                            <li>PostgreSQL, Prisma ORM</li>
+                            <li>Socket.io, JWT, Keycloak SSO</li>
+                            <li>Stripe API, Multer</li>
+                            <li>Winston (logging), Helmet</li>
                         </ul>
                     </div>
                     <div class="skill-card">
                         <div class="skill-header">
-                            <i class="fas fa-brain"></i>
-                            <h3>AI-модели</h3>
+                            <i class="fas fa-robot"></i>
+                            <h3>AI & Dev Workflow</h3>
                         </div>
                         <ul class="skill-list">
-                            <li>DeepSeek</li>
-                            <li>Qwen</li>
-                            <li>GigaCode</li>
-                        </ul>
-                    </div>
-                    <div class="skill-card">
-                        <div class="skill-header">
-                            <i class="fas fa-wand-magic-sparkles"></i>
-                            <h3>AI-возможности</h3>
-                        </div>
-                        <ul class="skill-list">
-                            <li>Prompt Engineering</li>
-                            <li>AI-код-ревью</li>
-                            <li>Генерация тестов с помощью AI</li>
-                            <li>AI-рефакторинг</li>
+                            <li>LLM (DeepSeek, Qwen, GigaCode)</li>
+                            <li>Prompt Engineering, AI-код-ревью</li>
+                            <li>AI-рефакторинг, генерация тестов</li>
+                            <li>MCP-серверы: Narsil, Playwright</li>
                             <li>Автоматизация разработки</li>
-                        </ul>
-                    </div>
-                    <div class="skill-card">
-                        <div class="skill-header">
-                            <i class="fas fa-plug"></i>
-                            <h3>MCP-серверы</h3>
-                        </div>
-                        <ul class="skill-list">
-                            <li><strong>Narsil</strong> — анализ кода, графы вызовов, безопасность</li>
-                            <li><strong>Playwright</strong> — автоматизация браузера, UI-тесты</li>
-                            <li><strong>Clear-thought</strong> — структурированное мышление, децизион-модели</li>
-                            <li><strong>Memory</strong> — контекстная память, сохранение опыта</li>
-                            <li><strong>Context7</strong> — актуальная документация библиотек, примеры кода</li>
                         </ul>
                     </div>
                 </div>
@@ -157,30 +139,19 @@
                             <h3>Global Auction Marketplace</h3>
                             <p>Международная торговая площадка для аукционов с торгами в реальном времени и платежами через Stripe.</p>
                             <div class="project-tech">
-                                <span title="Современная библиотека для UI">React 19</span>
-                                <span title="Статическая проверка типов">TypeScript 5.3</span>
-                                <span title="Серверная среда выполнения">Node.js 20+</span>
-                                <span title="Веб-фреймворк">Express 4.18</span>
-                                <span title="ORM с типобезопасностью">Prisma 7.8</span>
-                                <span title="Продуктовая база данных">PostgreSQL 15+</span>
-                                <span title="Прямой драйвер PostgreSQL">pg adapter 7.8</span>
-                                <span title="Двусторонняя связь в реальном времени">Socket.io 4.7</span>
-                                <span title="Обработка платежей">Stripe 14.9</span>
-                                <span title="Токены авторизации">JWT 9.0</span>
-                                <span title="Хеширование паролей">bcrypt 3.0</span>
-                                <span title="Заголовки безопасности">Helmet 8.1</span>
-                                <span title="Защита от загрязнения HTTP-параметров">HPP 0.2</span>
-                                <span title="Сжатие ответов Gzip/Brotli">compression 1.8</span>
-                                <span title="Структурированное логирование">Winston 3.11</span>
-                                <span title="Сбор метрик Prometheus">prom-client 15.1</span>
-                                <span title="Кэширование в памяти">LRU Cache 11.2</span>
-                                <span title="Обработка адресов IPv4/IPv6">ipaddr.js 2.3</span>
-                                <span title="Загрузка файлов">Multer 2.1</span>
-                                <span title="Валидация схем">Zod</span>
-                                <span title="Управление состоянием">Zustand</span>
+                                <span>React 19</span>
+                                <span>TypeScript</span>
+                                <span>Node.js</span>
+                                <span>Express.js</span>
+                                <span>PostgreSQL</span>
+                                <span>Prisma ORM</span>
+                                <span>Socket.io</span>
+                                <span>Stripe</span>
+                                <span>Zustand</span>
+                                <span>Zod</span>
                             </div>
                             <div class="project-links">
-                                <a href="https://github.com/programmer-alt/auction-marketplace" class="project-link" target="_blank">
+                                <a href="https://github.com/programmer-alt/auction-marketplace" class="project-link" target="_blank" rel="noopener noreferrer">
                                     <i class="fab fa-github"></i> GitHub
                                 </a>
                             </div>
@@ -198,17 +169,16 @@
                             <h3>Keycloak Messenger</h3>
                             <p>Веб-мессенджер с корпоративной аутентификацией через Keycloak SSO и обменом сообщениями в реальном времени.</p>
                             <div class="project-tech">
-                                <span title="Современная библиотека для UI">React 19</span>
-                                <span title="Типизированный JavaScript">TypeScript</span>
-                                <span title="WebSocket соединения">Socket.io Client</span>
-                                <span title="Клиент аутентификации">Keycloak-js</span>
-                                <span title="Серверная среда выполнения">Node.js</span>
-                                <span title="Веб-фреймворк">Express.js</span>
-                                <span title="Реальное время">Socket.io</span>
-                                <span title="Токены аутентификации">JWT</span>
+                                <span>React 19</span>
+                                <span>TypeScript</span>
+                                <span>Socket.io</span>
+                                <span>Keycloak SSO</span>
+                                <span>Node.js</span>
+                                <span>Express.js</span>
+                                <span>JWT</span>
                             </div>
                             <div class="project-links">
-                                <a href="https://github.com/programmer-alt/Keycloak-messenger" class="project-link" target="_blank">
+                                <a href="https://github.com/programmer-alt/Keycloak-messenger" class="project-link" target="_blank" rel="noopener noreferrer">
                                     <i class="fab fa-github"></i> GitHub
                                 </a>
                             </div>
@@ -251,14 +221,14 @@
                         <i class="fab fa-github"></i>
                         <div>
                             <h3>GitHub</h3>
-                            <a href="https://github.com/programmer-alt" target="_blank">programmer-alt</a>
+                            <a href="https://github.com/programmer-alt" target="_blank" rel="noopener noreferrer">programmer-alt</a>
                         </div>
                     </div>
                     <div class="contact-item">
                         <i class="fab fa-telegram"></i>
                         <div>
                             <h3>Telegram</h3>
-                            <a href="https://t.me/Demitil_Triptonnin" target="_blank">@Demitil_Triptonnin</a>
+                            <a href="https://t.me/Demitil_Triptonnin" target="_blank" rel="noopener noreferrer">@Demitil_Triptonnin</a>
                         </div>
                     </div>
                 </div>
@@ -268,10 +238,10 @@
 
     <footer class="footer">
         <div class="container">
-            <button class="btn-download-cv" onclick="window.print()" aria-label="Скачать CV">
+            <a href="resume.pdf" download="Karagodin_Vadim_CV.pdf" class="btn-download-cv">
                 <i class="fas fa-file-pdf"></i>
                 <span>Скачать резюме в PDF</span>
-            </button>
+            </a>
             <p>&copy; 2026 Карагодин Вадим. Все права защищены.</p>
         </div>
     </footer>
