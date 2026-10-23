@@ -326,9 +326,10 @@ ul {
     border-radius: inherit;
     padding: 2px;
     background: radial-gradient(
-        400px circle at var(--mouse-x, 0) var(--mouse-y, 0), 
-        rgba(59, 130, 246, 0.4),
-        transparent 40%
+        500px circle at var(--mouse-x, 0) var(--mouse-y, 0), 
+        rgba(59, 130, 246, 0.9),
+        rgba(139, 92, 246, 0.4) 50%,
+        transparent 70%
     );
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
@@ -343,9 +344,30 @@ ul {
     opacity: 1;
 }
 
+/* Внутреннее свечение карточки */
+.skill-card::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+        400px circle at var(--mouse-x, 0) var(--mouse-y, 0), 
+        rgba(59, 130, 246, 0.08),
+        transparent 60%
+    );
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.skill-card:hover::after {
+    opacity: 1;
+}
+
 .skill-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 25px rgba(59, 130, 246, 0.2);
 }
 
 .skill-header {
