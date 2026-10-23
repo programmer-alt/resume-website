@@ -91,7 +91,6 @@
                 const x = i * fontSize;
                 const y = drops[i] * fontSize;
                 
-                // Чередуем акцентные цвета: яркий синий для головы, полупрозрачный для хвоста
                 if (Math.random() > 0.85) {
                     ctx.fillStyle = '#8b5cf6';
                 } else {
@@ -191,7 +190,6 @@
 
         animateSections() {
             DOM.sections.forEach((section) => {
-                // Анимация для заголовков и контента секций
                 const title = section.querySelector('.section-title');
                 const content = section.querySelector('.about-content');
                 if (title) {
@@ -216,7 +214,7 @@
 
     /* ============================================
        TYPING EFFECT
-       ============================================ */
+        ============================================ */
     const TypingEffect = {
         active: false,
         observer: null,
@@ -264,6 +262,154 @@
     };
 
     /* ============================================
+       LIGHTNING CANVAS EFFECT — High-Voltage Arc Physics
+       ============================================ */
+    function initLightning() {
+        const cards = document.querySelectorAll('.project-card[data-lightning]');
+
+        cards.forEach(card => {
+            const canvas = card.querySelector('.lightning-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            let isHovered = false;
+            let animationFrameId = null;
+            const padding = 35;
+            let bolts = [];
+
+            const resizeCanvas = () => {
+                canvas.width = card.clientWidth + padding * 2;
+                canvas.height = card.clientHeight + padding * 2;
+            };
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Midpoint Displacement for zigzag geometry
+            const createSegments = (x1, y1, x2, y2, displace, depth = 0) => {
+                let segments = [];
+                if (displace < 3 || depth > 6) {
+                    segments.push({ x1, y1, x2, y2, main: depth === 0 });
+                    return segments;
+                }
+
+                const midX = (x1 + x2) / 2 + (Math.random() - 0.5) * displace;
+                const midY = (y1 + y2) / 2 + (Math.random() - 0.5) * displace;
+
+                segments.push(...createSegments(x1, y1, midX, midY, displace / 1.8, depth));
+                segments.push(...createSegments(midX, midY, x2, y2, displace / 1.8, depth));
+
+                // Sharp side branches (electric whiskers)
+                if (depth < 2 && Math.random() < 0.45 && displace > 10) {
+                    const angle = Math.atan2(y2 - y1, x2 - x1) + (Math.random() > 0.5 ? 1 : -1) * (0.4 + Math.random() * 0.7);
+                    const len = displace * (0.9 + Math.random() * 1.1);
+                    const bx = midX + Math.cos(angle) * len;
+                    const by = midY + Math.sin(angle) * len;
+                    segments.push(...createSegments(midX, midY, bx, by, displace / 2.2, depth + 1));
+                }
+
+                return segments;
+            };
+
+            // Get perimeter point by distance
+            const getPerimeterPoint = (dist, w, h) => {
+                const perimeter = 2 * (w + h);
+                let d = ((dist % perimeter) + perimeter) % perimeter;
+                if (d < w) return { x: padding + d, y: padding };
+                d -= w;
+                if (d < h) return { x: padding + w, y: padding + d };
+                d -= h;
+                if (d < w) return { x: padding + w - d, y: padding + h };
+                d -= w;
+                return { x: padding, y: padding + h - d };
+            };
+
+            // Spawn a new arc on a random section of the card perimeter
+            const spawnBolt = () => {
+                const w = canvas.width - padding * 2;
+                const h = canvas.height - padding * 2;
+                const perimeter = 2 * (w + h);
+
+                const startDist = Math.random() * perimeter;
+                const arcLength = 90 + Math.random() * 180;
+
+                const p1 = getPerimeterPoint(startDist, w, h);
+                const p2 = getPerimeterPoint(startDist + arcLength, w, h);
+
+                const displace = Math.min(arcLength * 0.25, 38);
+
+                bolts.push({
+                    segments: createSegments(p1.x, p1.y, p2.x, p2.y, displace),
+                    alpha: 1.0,
+                    decay: 0.04 + Math.random() * 0.07
+                });
+            };
+
+            const render = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Spawn arcs irregularly, like real electrical breakdowns
+                if (isHovered && bolts.length < 3 && Math.random() < 0.25) {
+                    spawnBolt();
+                    if (Math.random() < 0.3) spawnBolt();
+                }
+
+                for (let i = bolts.length - 1; i >= 0; i--) {
+                    const bolt = bolts[i];
+                    ctx.save();
+
+                    // Layer 1: Wide blue glow (ionization aura)
+                    ctx.beginPath();
+                    for (const seg of bolt.segments) {
+                        ctx.moveTo(seg.x1, seg.y1);
+                        ctx.lineTo(seg.x2, seg.y2);
+                    }
+                    ctx.strokeStyle = `rgba(59, 130, 246, ${bolt.alpha * 0.6})`;
+                    ctx.lineWidth = 4;
+                    ctx.shadowColor = '#00d4ff';
+                    ctx.shadowBlur = 20;
+                    ctx.stroke();
+
+                    // Layer 2: Thin superheated white-cyan core
+                    ctx.beginPath();
+                    for (const seg of bolt.segments) {
+                        ctx.moveTo(seg.x1, seg.y1);
+                        ctx.lineTo(seg.x2, seg.y2);
+                    }
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${bolt.alpha})`;
+                    ctx.lineWidth = 1.2;
+                    ctx.shadowBlur = 5;
+                    ctx.stroke();
+
+                    ctx.restore();
+
+                    bolt.alpha -= bolt.decay;
+                    if (bolt.alpha <= 0) {
+                        bolts.splice(i, 1);
+                    }
+                }
+
+                if (isHovered || bolts.length > 0) {
+                    animationFrameId = requestAnimationFrame(render);
+                } else {
+                    animationFrameId = null;
+                }
+            };
+
+            card.addEventListener('mouseenter', () => {
+                isHovered = true;
+                resizeCanvas();
+                spawnBolt(); // Instant arc on hover
+                if (!animationFrameId) render();
+            });
+
+            card.addEventListener('mouseleave', () => {
+                isHovered = false;
+            });
+        });
+    }
+
+    /* ============================================
        INITIALIZATION
        ============================================ */
     function init() {
@@ -273,6 +419,7 @@
         ScrollProgress.init();
         ScrollAnimations.init();
         TypingEffect.init();
+        initLightning();
 
         // Recalculate matrix on resize
         let resizeTimeout;
