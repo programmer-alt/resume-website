@@ -57,7 +57,7 @@ portfolio/
 ├── js/
 │   └── main.js         # JavaScript
 ├── images/
-│   └── avatar.jpg      # Фото аватарки
+│   └── avatar.png      # Фото аватарки
 ├── resume.pdf          # Резюме (PDF)
 └── README.md           # Документация
 ```
@@ -71,7 +71,7 @@ portfolio/
 ## 📝 Кастомизация
 
 ### Изменить фото
-Замените `images/avatar.jpg` на своё фото
+Замените `images/avatar.png` на своё фото
 
 ### Обновить навыки
 Редактируйте список в `index.html` (секция `.skill-list`)

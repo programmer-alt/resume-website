@@ -351,7 +351,7 @@
             const render = () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                if (isHovered && bolts.length < 3 && Math.random() < 0.01) {
+                if (isHovered && bolts.length < 3 && Math.random() < 0.05) {
                     spawnBolt();
                     if (Math.random() < 0.3) spawnBolt();
                 }
