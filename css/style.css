@@ -401,12 +401,20 @@ ul {
     gap: 30px;
 }
 
+.projects-grid .project-card:first-of-type {
+    overflow: visible;
+}
+
 .project-card {
     background: var(--color-bg-card);
     border-radius: var(--border-radius);
     overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
     position: relative;
+}
+
+.project-card[data-lightning] {
+    overflow: visible;
 }
 
 .project-card:hover {
@@ -425,6 +433,7 @@ ul {
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
+    border-radius: var(--border-radius);
 }
 
 .project-card:hover::before {
@@ -434,6 +443,132 @@ ul {
 .project-card:hover .project-placeholder {
     transform: scale(1.1);
     color: #8b5cf6;
+}
+
+/* ============================================
+   LIGHTNING CANVAS
+   ============================================ */
+.lightning-canvas {
+    position: absolute;
+    top: -30px;
+    left: -30px;
+    width: calc(100% + 60px);
+    height: calc(100% + 60px);
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.project-card:hover .lightning-canvas {
+    opacity: 1;
+}
+
+.projects-grid .project-card:first-of-type:hover::after {
+    opacity: 1;
+}
+
+@property --lightning-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes lightningRotate {
+    from {
+        --lightning-angle: 0deg;
+    }
+    to {
+        --lightning-angle: 360deg;
+    }
+}
+
+/* Lightning sparks — small electric dots that jump off the border */
+.lightning-spark {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #8b5cf6;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 0 6px 2px rgba(139, 92, 246, 0.6);
+    z-index: 10;
+}
+
+.project-card:hover .lightning-spark {
+    animation: sparkJump 1.5s ease-out infinite;
+}
+
+.projects-grid .project-card:first-of-type .lightning-spark {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #8b5cf6;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 0 6px 2px rgba(139, 92, 246, 0.6);
+    z-index: 10;
+}
+
+.projects-grid .project-card:first-of-type:hover .lightning-spark {
+    animation: sparkJump 1.5s ease-out infinite;
+}
+
+.projects-grid .project-card:first-of-type .lightning-spark:nth-child(1) {
+    top: 0;
+    left: 20%;
+    animation-delay: 0s !important;
+}
+
+.projects-grid .project-card:first-of-type .lightning-spark:nth-child(2) {
+    top: 0;
+    right: 25%;
+    animation-delay: 0.4s !important;
+}
+
+.projects-grid .project-card:first-of-type .lightning-spark:nth-child(3) {
+    bottom: 0;
+    left: 30%;
+    animation-delay: 0.8s !important;
+}
+
+.projects-grid .project-card:first-of-type .lightning-spark:nth-child(4) {
+    bottom: 0;
+    right: 20%;
+    animation-delay: 1.2s !important;
+}
+
+.projects-grid .project-card:first-of-type .lightning-spark:nth-child(5) {
+    top: 40%;
+    left: 0;
+    animation-delay: 0.2s !important;
+}
+
+.projects-grid .project-card:first-of-type .lightning-spark:nth-child(6) {
+    top: 50%;
+    right: 0;
+    animation-delay: 0.6s !important;
+}
+
+@keyframes sparkJump {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translate(0, 0);
+    }
+    20% {
+        opacity: 1;
+        transform: scale(1.2) translate(0, 0);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(0.8) translate(var(--spark-x, 10px), var(--spark-y, -8px));
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.3) translate(calc(var(--spark-x, 10px) * 2), calc(var(--spark-y, -8px) * 2));
+    }
 }
 
 .project-image {
