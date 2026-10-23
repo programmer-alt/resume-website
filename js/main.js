@@ -507,6 +507,13 @@
                 return text;
             });
 
+            // Restore text before printing so the printed page has content
+            window.addEventListener('beforeprint', () => {
+                aboutTexts.forEach((p, i) => {
+                    if (i < originalTexts.length) p.textContent = originalTexts[i];
+                });
+            });
+
             let isTypingStarted = false;
 
             const typeWriter = (element, text, speed, callback) => {
@@ -544,6 +551,65 @@
             }, { threshold: 0.4 });
 
             observer.observe(aboutSection);
+        }
+    });
+
+    /* ============================================
+       3D TILT — Education Card
+       ============================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+        const eduCard = document.querySelector('.education-card');
+        
+        if (eduCard) {
+            eduCard.addEventListener('mousemove', (e) => {
+                const rect = eduCard.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -10;
+                const rotateY = ((x - centerX) / centerX) * 10;
+                
+                eduCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+
+            eduCard.addEventListener('mouseleave', () => {
+                eduCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+                eduCard.style.transition = 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
+            });
+
+            eduCard.addEventListener('mouseenter', () => {
+                eduCard.style.transition = 'none';
+            });
+        }
+    });
+
+    /* ============================================
+       STAGGER ANIMATION — Contact Cards
+       ============================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+        const contactItems = document.querySelectorAll('.contact-item');
+
+        if (contactItems.length > 0) {
+            const contactObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        contactItems.forEach((item, index) => {
+                            setTimeout(() => {
+                                item.classList.add('visible');
+                            }, index * 150);
+                        });
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.2 });
+
+            const contactSection = document.querySelector('#contact');
+            if (contactSection) {
+                contactObserver.observe(contactSection);
+            }
         }
     });
 
