@@ -271,7 +271,8 @@
             const canvas = card.querySelector('.lightning-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            
+            if (!ctx) return;
+
             let isHovered = false;
             let animationFrameId = null;
             const padding = 35;
@@ -280,10 +281,35 @@
             const resizeCanvas = () => {
                 canvas.width = card.clientWidth + padding * 2;
                 canvas.height = card.clientHeight + padding * 2;
+                bolts = [];
             };
 
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
+
+            // Create spark elements
+            const sparkPositions = [
+                { top: '0', left: '20%', '--spark-x': '10px', '--spark-y': '-8px' },
+                { top: '0', right: '25%', '--spark-x': '-12px', '--spark-y': '-6px' },
+                { bottom: '0', left: '30%', '--spark-x': '8px', '--spark-y': '10px' },
+                { bottom: '0', right: '20%', '--spark-x': '-10px', '--spark-y': '8px' },
+                { top: '40%', left: '0', '--spark-x': '14px', '--spark-y': '-4px' },
+                { top: '50%', right: '0', '--spark-x': '-14px', '--spark-y': '-5px' }
+            ];
+
+            sparkPositions.forEach((pos, i) => {
+                const spark = document.createElement('span');
+                spark.className = 'lightning-spark';
+                spark.style.animationDelay = `${i * 0.4}s`;
+                Object.entries(pos).forEach(([key, value]) => {
+                    if (key.startsWith('--spark')) {
+                        spark.style.setProperty(key, value);
+                    } else {
+                        spark.style[key] = value;
+                    }
+                });
+                card.appendChild(spark);
+            });
 
             // Midpoint Displacement for zigzag geometry
             const createSegments = (x1, y1, x2, y2, displace, depth = 0) => {
@@ -349,7 +375,7 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 // Spawn arcs irregularly, like real electrical breakdowns
-                if (isHovered && bolts.length < 3 && Math.random() < 0.25) {
+                if (isHovered && bolts.length < 3 && Math.random() < 0.05) {
                     spawnBolt();
                     if (Math.random() < 0.3) spawnBolt();
                 }
@@ -428,6 +454,53 @@
             resizeTimeout = setTimeout(() => MatrixRain.resize(), 150);
         });
     }
+
+    /* ============================================
+       SPOTLIGHT HOVER EFFECT
+       ============================================ */
+    document.querySelectorAll('.skill-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+        });
+    });
+
+    /* ============================================
+       AI DECODING TEXT EFFECT
+       ============================================ */
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
+
+    document.querySelectorAll('.skill-list li').forEach(li => {
+        li.dataset.value = li.innerText;
+        
+        li.addEventListener('mouseenter', e => {
+            let iteration = 0;
+            let interval = null;
+            
+            clearInterval(interval);
+            
+            interval = setInterval(() => {
+                e.target.innerText = e.target.innerText
+                    .split("")
+                    .map((letter, index) => {
+                        if(index < iteration) {
+                            return e.target.dataset.value[index];
+                        }
+                        return letters[Math.floor(Math.random() * letters.length)];
+                    })
+                    .join("");
+                
+                if(iteration >= e.target.dataset.value.length){
+                    clearInterval(interval);
+                }
+                iteration += 1 / 2; 
+            }, 30);
+        });
+    });
 
     // Start when DOM is ready
     if (document.readyState === 'loading') {
