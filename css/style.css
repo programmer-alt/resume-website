@@ -309,10 +309,38 @@ ul {
 }
 
 .skill-card {
+    position: relative;
+    overflow: hidden;
     background: var(--color-bg-card);
     padding: 30px;
     border-radius: var(--border-radius);
     transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid var(--color-border);
+}
+
+/* Фонарик — следует за курсором */
+.skill-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: radial-gradient(
+        400px circle at var(--mouse-x, 0) var(--mouse-y, 0), 
+        rgba(59, 130, 246, 0.4),
+        transparent 40%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.skill-card:hover::before {
+    opacity: 1;
 }
 
 .skill-card:hover {
@@ -325,22 +353,55 @@ ul {
     align-items: center;
     gap: 15px;
     margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .skill-header i {
     font-size: 28px;
     color: var(--color-accent);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .skill-header h3 {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: 0.5px;
 }
 
 .skill-list li {
-    padding: 12px 0;
+    padding: 10px 0;
     color: var(--color-text-secondary);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: none;
+    font-size: 15px;
+    font-family: var(--font-family);
+    line-height: 1.6;
+    font-weight: 400;
+    position: relative;
+}
+
+.skill-list li::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-accent), #8b5cf6);
+    transition: width 0.3s ease;
+    border-radius: 1px;
+}
+
+.skill-list li:hover::after {
+    width: 100%;
 }
 
 .skill-list li:last-child {
@@ -401,20 +462,13 @@ ul {
     gap: 30px;
 }
 
-.projects-grid .project-card:first-of-type {
-    overflow: visible;
-}
-
 .project-card {
     background: var(--color-bg-card);
     border-radius: var(--border-radius);
-    overflow: hidden;
+    overflow: visible;
     transition: transform 0.3s, box-shadow 0.3s;
     position: relative;
-}
-
-.project-card[data-lightning] {
-    overflow: visible;
+    border: 1px solid var(--color-border);
 }
 
 .project-card:hover {
@@ -462,113 +516,6 @@ ul {
 
 .project-card:hover .lightning-canvas {
     opacity: 1;
-}
-
-.projects-grid .project-card:first-of-type:hover::after {
-    opacity: 1;
-}
-
-@property --lightning-angle {
-    syntax: '<angle>';
-    initial-value: 0deg;
-    inherits: false;
-}
-
-@keyframes lightningRotate {
-    from {
-        --lightning-angle: 0deg;
-    }
-    to {
-        --lightning-angle: 360deg;
-    }
-}
-
-/* Lightning sparks — small electric dots that jump off the border */
-.lightning-spark {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: #8b5cf6;
-    border-radius: 50%;
-    pointer-events: none;
-    opacity: 0;
-    box-shadow: 0 0 6px 2px rgba(139, 92, 246, 0.6);
-    z-index: 10;
-}
-
-.project-card:hover .lightning-spark {
-    animation: sparkJump 1.5s ease-out infinite;
-}
-
-.projects-grid .project-card:first-of-type .lightning-spark {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: #8b5cf6;
-    border-radius: 50%;
-    pointer-events: none;
-    opacity: 0;
-    box-shadow: 0 0 6px 2px rgba(139, 92, 246, 0.6);
-    z-index: 10;
-}
-
-.projects-grid .project-card:first-of-type:hover .lightning-spark {
-    animation: sparkJump 1.5s ease-out infinite;
-}
-
-.projects-grid .project-card:first-of-type .lightning-spark:nth-child(1) {
-    top: 0;
-    left: 20%;
-    animation-delay: 0s !important;
-}
-
-.projects-grid .project-card:first-of-type .lightning-spark:nth-child(2) {
-    top: 0;
-    right: 25%;
-    animation-delay: 0.4s !important;
-}
-
-.projects-grid .project-card:first-of-type .lightning-spark:nth-child(3) {
-    bottom: 0;
-    left: 30%;
-    animation-delay: 0.8s !important;
-}
-
-.projects-grid .project-card:first-of-type .lightning-spark:nth-child(4) {
-    bottom: 0;
-    right: 20%;
-    animation-delay: 1.2s !important;
-}
-
-.projects-grid .project-card:first-of-type .lightning-spark:nth-child(5) {
-    top: 40%;
-    left: 0;
-    animation-delay: 0.2s !important;
-}
-
-.projects-grid .project-card:first-of-type .lightning-spark:nth-child(6) {
-    top: 50%;
-    right: 0;
-    animation-delay: 0.6s !important;
-}
-
-@keyframes sparkJump {
-    0% {
-        opacity: 0;
-        transform: scale(0.5) translate(0, 0);
-    }
-    20% {
-        opacity: 1;
-        transform: scale(1.2) translate(0, 0);
-    }
-    50% {
-        opacity: 0.8;
-        transform: scale(0.8) translate(var(--spark-x, 10px), var(--spark-y, -8px));
-    }
-    100% {
-        opacity: 0;
-        transform: scale(0.3) translate(calc(var(--spark-x, 10px) * 2), calc(var(--spark-y, -8px) * 2));
-    }
 }
 
 .project-image {
