@@ -487,7 +487,7 @@ ul {
 .project-card {
     background: var(--color-bg-card);
     border-radius: var(--border-radius);
-    overflow: visible;
+    overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
     position: relative;
     border: 1px solid var(--color-border);
@@ -524,16 +524,31 @@ ul {
 /* ============================================
    LIGHTNING CANVAS
    ============================================ */
-.lightning-canvas {
+.lightning-wrap {
     position: absolute;
     top: -30px;
     left: -30px;
     width: calc(100% + 60px);
     height: calc(100% + 60px);
+    border-radius: var(--border-radius);
+    overflow: hidden;
     pointer-events: none;
-    z-index: 10;
+    z-index: 15;
     opacity: 0;
     transition: opacity 0.3s ease;
+}
+
+.project-card:hover .lightning-wrap {
+    opacity: 1;
+}
+
+.lightning-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
 
 .project-card:hover .lightning-canvas {
@@ -1019,4 +1034,21 @@ ul {
         animation: none !important;
         transition: none !important;
     }
+}
+
+/* ============================================
+   AI CURSOR — Blinking Terminal Cursor
+   ============================================ */
+.ai-cursor::after {
+    content: '█';
+    color: #3b82f6;
+    margin-left: 6px;
+    animation: blink-cursor 0.8s step-end infinite;
+    display: inline-block;
+    vertical-align: baseline;
+}
+
+@keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
