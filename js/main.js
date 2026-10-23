@@ -271,8 +271,7 @@
             const canvas = card.querySelector('.lightning-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
+            
             let isHovered = false;
             let animationFrameId = null;
             const padding = 35;
@@ -281,41 +280,16 @@
             const resizeCanvas = () => {
                 canvas.width = card.clientWidth + padding * 2;
                 canvas.height = card.clientHeight + padding * 2;
-                bolts = [];
             };
 
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
 
-            // Create spark elements
-            const sparkPositions = [
-                { top: '0', left: '20%', '--spark-x': '10px', '--spark-y': '-8px' },
-                { top: '0', right: '25%', '--spark-x': '-12px', '--spark-y': '-6px' },
-                { bottom: '0', left: '30%', '--spark-x': '8px', '--spark-y': '10px' },
-                { bottom: '0', right: '20%', '--spark-x': '-10px', '--spark-y': '8px' },
-                { top: '40%', left: '0', '--spark-x': '14px', '--spark-y': '-4px' },
-                { top: '50%', right: '0', '--spark-x': '-14px', '--spark-y': '-5px' }
-            ];
-
-            sparkPositions.forEach((pos, i) => {
-                const spark = document.createElement('span');
-                spark.className = 'lightning-spark';
-                spark.style.animationDelay = `${i * 0.4}s`;
-                Object.entries(pos).forEach(([key, value]) => {
-                    if (key.startsWith('--spark')) {
-                        spark.style.setProperty(key, value);
-                    } else {
-                        spark.style[key] = value;
-                    }
-                });
-                card.appendChild(spark);
-            });
-
-            // Midpoint Displacement for zigzag geometry
+            // Генерация геометрии молнии
             const createSegments = (x1, y1, x2, y2, displace, depth = 0) => {
                 let segments = [];
                 if (displace < 3 || depth > 6) {
-                    segments.push({ x1, y1, x2, y2, main: depth === 0 });
+                    segments.push({ x1, y1, x2, y2 });
                     return segments;
                 }
 
@@ -325,7 +299,7 @@
                 segments.push(...createSegments(x1, y1, midX, midY, displace / 1.8, depth));
                 segments.push(...createSegments(midX, midY, x2, y2, displace / 1.8, depth));
 
-                // Sharp side branches (electric whiskers)
+                // Боковые отростки
                 if (depth < 2 && Math.random() < 0.45 && displace > 10) {
                     const angle = Math.atan2(y2 - y1, x2 - x1) + (Math.random() > 0.5 ? 1 : -1) * (0.4 + Math.random() * 0.7);
                     const len = displace * (0.9 + Math.random() * 1.1);
@@ -337,7 +311,7 @@
                 return segments;
             };
 
-            // Get perimeter point by distance
+            // Координаты периметра рамки
             const getPerimeterPoint = (dist, w, h) => {
                 const perimeter = 2 * (w + h);
                 let d = ((dist % perimeter) + perimeter) % perimeter;
@@ -350,7 +324,7 @@
                 return { x: padding, y: padding + h - d };
             };
 
-            // Spawn a new arc on a random section of the card perimeter
+            // Спавн нового разряда
             const spawnBolt = () => {
                 const w = canvas.width - padding * 2;
                 const h = canvas.height - padding * 2;
@@ -366,6 +340,9 @@
 
                 bolts.push({
                     segments: createSegments(p1.x, p1.y, p2.x, p2.y, displace),
+                    p1,
+                    p2,
+                    arcLength,
                     alpha: 1.0,
                     decay: 0.04 + Math.random() * 0.07
                 });
@@ -374,8 +351,7 @@
             const render = () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Spawn arcs irregularly, like real electrical breakdowns
-                if (isHovered && bolts.length < 3 && Math.random() < 0.05) {
+                if (isHovered && bolts.length < 3 && Math.random() < 0.01) {
                     spawnBolt();
                     if (Math.random() < 0.3) spawnBolt();
                 }
@@ -384,19 +360,34 @@
                     const bolt = bolts[i];
                     ctx.save();
 
-                    // Layer 1: Wide blue glow (ionization aura)
+                    // 1. НАГРЕВ РАМКИ (Точки входа и выхода тока)
+                    ctx.beginPath();
+                    ctx.arc(bolt.p1.x, bolt.p1.y, 2.5, 0, Math.PI * 2);
+                    ctx.arc(bolt.p2.x, bolt.p2.y, 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${bolt.alpha})`;
+                    ctx.shadowColor = '#00d4ff';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(bolt.p1.x, bolt.p1.y, 12, 0, Math.PI * 2);
+                    ctx.arc(bolt.p2.x, bolt.p2.y, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(59, 130, 246, ${bolt.alpha * 0.5})`;
+                    ctx.shadowBlur = 25;
+                    ctx.fill();
+
+                    // 2. Внешнее свечение дуги
                     ctx.beginPath();
                     for (const seg of bolt.segments) {
                         ctx.moveTo(seg.x1, seg.y1);
                         ctx.lineTo(seg.x2, seg.y2);
                     }
                     ctx.strokeStyle = `rgba(59, 130, 246, ${bolt.alpha * 0.6})`;
-                    ctx.lineWidth = 4;
-                    ctx.shadowColor = '#00d4ff';
-                    ctx.shadowBlur = 20;
+                    ctx.lineWidth = 3.5;
+                    ctx.shadowBlur = 15;
                     ctx.stroke();
 
-                    // Layer 2: Thin superheated white-cyan core
+                    // 3. Белое тонкое ядро молнии
                     ctx.beginPath();
                     for (const seg of bolt.segments) {
                         ctx.moveTo(seg.x1, seg.y1);
@@ -404,7 +395,7 @@
                     }
                     ctx.strokeStyle = `rgba(255, 255, 255, ${bolt.alpha})`;
                     ctx.lineWidth = 1.2;
-                    ctx.shadowBlur = 5;
+                    ctx.shadowBlur = 4;
                     ctx.stroke();
 
                     ctx.restore();
@@ -425,7 +416,7 @@
             card.addEventListener('mouseenter', () => {
                 isHovered = true;
                 resizeCanvas();
-                spawnBolt(); // Instant arc on hover
+                spawnBolt();
                 if (!animationFrameId) render();
             });
 
@@ -500,6 +491,60 @@
                 iteration += 1 / 2; 
             }, 30);
         });
+    });
+
+    /* ============================================
+       AI CURSOR — Typing Effect for "About Me"
+       ============================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+        const aboutSection = document.querySelector('#about');
+        const aboutTexts = document.querySelectorAll('.about-text');
+
+        if (aboutSection && aboutTexts.length > 0) {
+            const originalTexts = Array.from(aboutTexts).map(p => {
+                const text = p.textContent.trim();
+                p.textContent = '';
+                return text;
+            });
+
+            let isTypingStarted = false;
+
+            const typeWriter = (element, text, speed, callback) => {
+                let i = 0;
+                element.classList.add('ai-cursor');
+
+                const typing = setInterval(() => {
+                    if (i < text.length) {
+                        element.textContent += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typing);
+                        element.classList.remove('ai-cursor');
+                        if (callback) callback();
+                    }
+                }, speed);
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !isTypingStarted) {
+                    isTypingStarted = true;
+
+                    typeWriter(aboutTexts[0], originalTexts[0], 10, () => {
+                        if (aboutTexts[1]) {
+                            typeWriter(aboutTexts[1], originalTexts[1], 10, () => {
+                                if (aboutTexts[2]) {
+                                    typeWriter(aboutTexts[2], originalTexts[2], 10, () => {
+                                        aboutTexts[2].classList.add('ai-cursor');
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            }, { threshold: 0.4 });
+
+            observer.observe(aboutSection);
+        }
     });
 
     // Start when DOM is ready
