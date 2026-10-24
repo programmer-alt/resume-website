@@ -1,1 +1,29 @@
-{}
+{
+	"name": "portfolio",
+	"version": "1.0.0",
+	"description": "Персональное портфолио-резюме фронтенд-разработчика. Одностраничный сайт, демонстрирующий навыки, проекты и опыт работы.",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint": "biome check .",
+		"lint:fix": "biome check --fix .",
+		"format": "biome format --write .",
+		"knip": "knip"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/programmer-alt/resume-website.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "commonjs",
+	"bugs": {
+		"url": "https://github.com/programmer-alt/resume-website/issues"
+	},
+	"homepage": "https://github.com/programmer-alt/resume-website#readme",
+	"devDependencies": {
+		"@biomejs/biome": "^2.6.3",
+		"knip": "^6.43.0"
+	}
+}
