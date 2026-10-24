@@ -25,6 +25,8 @@
             heroObserverThreshold: 0.5,
             sectionObserverThreshold: 0.1,
             sectionObserverMargin: '0px 0px -50px 0px',
+            lookingObserverThreshold: 0.6,
+            lookingObserverMargin: '0px 0px -100px 0px',
             skillCardStagger: 100, // ms
             projectCardStagger: 150,
             educationCardStagger: 100,
@@ -203,6 +205,20 @@
             });
         },
 
+        animateTitleLines() {
+            const titles = document.querySelectorAll('.section-title');
+            const lineObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-line');
+                        lineObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            titles.forEach((title) => lineObserver.observe(title));
+        },
+
         animateWithStagger(elements, staggerMs) {
             elements.forEach((el, index) => {
                 el.classList.add('animate-on-scroll');
@@ -272,7 +288,7 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             
-            let isHovered = false;
+            let isVisible = false;
             let animationFrameId = null;
             const padding = 35;
             let bolts = [];
@@ -351,7 +367,8 @@
             const render = () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                if (isHovered && bolts.length < 3 && Math.random() < 0.05) {
+                // Молнии спавнятся постоянно пока карточка видна
+                if (isVisible && bolts.length < 3 && Math.random() < 0.05) {
                     spawnBolt();
                     if (Math.random() < 0.3) spawnBolt();
                 }
@@ -406,23 +423,33 @@
                     }
                 }
 
-                if (isHovered || bolts.length > 0) {
+                if (isVisible || bolts.length > 0) {
                     animationFrameId = requestAnimationFrame(render);
                 } else {
                     animationFrameId = null;
                 }
             };
 
-            card.addEventListener('mouseenter', () => {
-                isHovered = true;
-                resizeCanvas();
-                spawnBolt();
-                if (!animationFrameId) render();
-            });
+            // IntersectionObserver — отслеживаем видимость карточки в viewport
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        isVisible = true;
+                        resizeCanvas();
+                        spawnBolt();
+                        if (!animationFrameId) render();
+                    } else {
+                        isVisible = false;
+                        bolts = []; // Очищаем молнии когда карточка не видна
+                        if (animationFrameId) {
+                            cancelAnimationFrame(animationFrameId);
+                            animationFrameId = null;
+                        }
+                    }
+                });
+            }, { threshold: 0.1 });
 
-            card.addEventListener('mouseleave', () => {
-                isHovered = false;
-            });
+            observer.observe(card);
         });
     }
 
@@ -437,6 +464,8 @@
         ScrollAnimations.init();
         TypingEffect.init();
         initLightning();
+        ScrollAnimations.animateTitleLines();
+        initOscilloscope();
 
         // Recalculate matrix on resize
         let resizeTimeout;
@@ -491,6 +520,55 @@
                 iteration += 1 / 2; 
             }, 30);
         });
+    });
+
+    /* ============================================
+       AI CURSOR — Typing Effect for "Looking For"
+       ============================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+        const lookingSection = document.querySelector('#looking-for');
+        const lookingTexts = document.querySelectorAll('#looking-for .about-text');
+
+        if (lookingSection && lookingTexts.length > 0) {
+            const originalTexts = Array.from(lookingTexts).map(p => {
+                const text = p.textContent.trim();
+                p.textContent = '';
+                return text;
+            });
+
+            let isTypingStarted = false;
+
+            const typeWriter = (element, text, speed, callback) => {
+                let i = 0;
+                element.classList.add('ai-cursor');
+
+                const typing = setInterval(() => {
+                    if (i < text.length) {
+                        element.textContent += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typing);
+                        element.classList.remove('ai-cursor');
+                        if (callback) callback();
+                    }
+                }, speed);
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !isTypingStarted) {
+                    isTypingStarted = true;
+
+                    typeWriter(lookingTexts[0], originalTexts[0], 15, () => {
+                        lookingTexts[0].classList.add('ai-cursor');
+                    });
+                }
+            }, { 
+                threshold: CONFIG.animations.lookingObserverThreshold,
+                rootMargin: CONFIG.animations.lookingObserverMargin 
+            });
+
+            observer.observe(lookingSection);
+        }
     });
 
     /* ============================================
@@ -587,8 +665,8 @@
     });
 
     /* ============================================
-       STAGGER ANIMATION — Contact Cards
-       ============================================ */
+        STAGGER ANIMATION — Contact Cards
+        ============================================ */
     document.addEventListener('DOMContentLoaded', () => {
         const contactItems = document.querySelectorAll('.contact-item');
 
@@ -612,6 +690,113 @@
             }
         }
     });
+
+    /* ============================================
+       REALTIME OSCILLOSCOPE — 3-Stage Reactive Signal
+       ============================================ */
+    function initOscilloscope() {
+        const contactSection = document.getElementById('contact');
+        const mainPath = document.getElementById('oscPathMain');
+        const echoPath = document.getElementById('oscPathEcho');
+        const contactCards = document.querySelectorAll('.contact-item');
+
+        if (!contactSection || !mainPath || !echoPath) return;
+
+        const width = 800;
+        const height = 80;
+        const baseY = height / 2;
+
+        // Пресеты состояний: Покой -> Наведение на блок -> Наведение на карточку
+        const STATES = {
+            standby: { amp: 3.5, freq: 2.0, speed: 0.025 },
+            section: { amp: 12.0, freq: 4.5, speed: 0.07 },
+            card:    { amp: 25.0, freq: 9.5, speed: 0.16 } // Учащенный импульс
+        };
+
+        let current = { ...STATES.standby };
+        let target = { ...STATES.standby };
+        let phase = 0;
+        let isVisible = false;
+        let animId = null;
+
+        // Построение кривой с затуханием к краям (огибающая)
+        const buildWavePath = (amp, freq, phaseOffset, harmonicMult) => {
+            const step = 4;
+            let d = `M 0,${baseY}`;
+
+            for (let x = step; x <= width; x += step) {
+                const normX = x / width;
+                // Огибающая: края (0% и 100%) всегда сведены в 0, пик в центре
+                const envelope = Math.pow(Math.sin(normX * Math.PI), 1.6);
+
+                // Наложение двух частот для реалистичного радиосигнала
+                const w1 = Math.sin(normX * Math.PI * 2 * freq - phaseOffset);
+                const w2 = Math.sin(normX * Math.PI * 2 * (freq * 1.65) + phaseOffset * harmonicMult) * 0.35;
+
+                const y = baseY + (w1 + w2) * amp * envelope;
+                d += ` L ${x},${y.toFixed(1)}`;
+            }
+            return d;
+        };
+
+        const render = () => {
+            // Плавное физическое ускорение/замедление параметров (LERP)
+            current.amp   += (target.amp - current.amp) * 0.08;
+            current.freq  += (target.freq - current.freq) * 0.06;
+            current.speed += (target.speed - current.speed) * 0.08;
+
+            phase += current.speed;
+
+            mainPath.setAttribute('d', buildWavePath(current.amp, current.freq, phase, 1.2));
+            echoPath.setAttribute('d', buildWavePath(current.amp * 0.75, current.freq * 0.85, -phase * 0.8, 1.5));
+
+            if (isVisible) {
+                animId = requestAnimationFrame(render);
+            } else {
+                animId = null;
+            }
+        };
+
+        // 1. Наведение на секцию Контакты
+        contactSection.addEventListener('mouseenter', () => {
+            target = { ...STATES.section };
+            contactSection.classList.add('osc-section-hover');
+        });
+
+        contactSection.addEventListener('mouseleave', () => {
+            target = { ...STATES.standby };
+            contactSection.classList.remove('osc-section-hover', 'osc-card-hover');
+        });
+
+        // 2. Наведение на карточки контактов (Email, GitHub, Telegram) — учащение сигнала
+        contactCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                target = { ...STATES.card };
+                contactSection.classList.add('osc-card-hover');
+            });
+
+            card.addEventListener('mouseleave', () => {
+                target = { ...STATES.section };
+                contactSection.classList.remove('osc-card-hover');
+            });
+        });
+
+        // Оптимизация: крутим анимацию только когда секция Контактов на экране
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                isVisible = true;
+                if (!animId) render();
+            } else {
+                isVisible = false;
+                if (animId) {
+                    cancelAnimationFrame(animId);
+                    animId = null;
+                }
+            }
+        }, { threshold: 0.05 });
+
+        observer.observe(contactSection);
+    }
 
     // Start when DOM is ready
     if (document.readyState === 'loading') {
