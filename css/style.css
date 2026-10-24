@@ -74,23 +74,47 @@ ul {
     padding: 80px 0;
 }
 
+/* Обновленный стиль для всех заголовков секций */
 .section-title {
-    font-size: 32px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 40px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+
+    /* Градиент от синего к фиолетовому */
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
     position: relative;
-    padding-bottom: 15px;
+    display: inline-block;
+    margin-bottom: 3rem;
 }
 
+/* Терминальный префикс к каждому заголовку */
+.section-title::before {
+    content: ">_ ";
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2rem;
+    font-weight: 500;
+
+    /* Отключаем градиент для префикса — просто синий */
+    -webkit-text-fill-color: #3b82f6;
+    margin-right: 12px;
+    opacity: 0.8;
+}
+
+/* Неоновое подчеркивание под заголовком */
 .section-title::after {
-    content: '';
+    content: "";
     position: absolute;
-    bottom: 0;
+    bottom: -10px;
     left: 0;
-    width: 60px;
-    height: 4px;
-    background: var(--color-accent);
-    border-radius: 2px;
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6, transparent);
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.5);
 }
 
 /* ============================================
@@ -534,12 +558,6 @@ ul {
     overflow: hidden;
     pointer-events: none;
     z-index: 15;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.project-card:hover .lightning-wrap {
-    opacity: 1;
 }
 
 .lightning-canvas {
@@ -686,8 +704,77 @@ ul {
 }
 
 /* ============================================
-   CONTACT
-   ============================================ */
+    CONTACT — OSCILLOSCOPE WAVE
+    ============================================ */
+.oscilloscope-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto 35px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.osc-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    z-index: 2;
+}
+
+.osc-path-main {
+    fill: none;
+    stroke: url(#oscGradient);
+    stroke-width: 2px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.5));
+    transition: stroke-width 0.3s ease, filter 0.3s ease;
+}
+
+.osc-path-echo {
+    fill: none;
+    stroke: url(#oscGradient);
+    stroke-width: 1px;
+    opacity: 0.35;
+}
+
+/* Усиление свечения при наведении на секцию */
+#contact.osc-section-hover .osc-path-main {
+    filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.7));
+}
+
+/* Максимальный накал при наведении на карточку контакта */
+#contact.osc-card-hover .osc-path-main {
+    stroke-width: 2.6px;
+    filter: drop-shadow(0 0 14px rgba(0, 212, 255, 1)) drop-shadow(0 0 25px rgba(139, 92, 246, 0.6));
+}
+
+/* Фоновое свечение центральной оси */
+.osc-glow {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.15) 50%, transparent 100%);
+    transition: all 0.4s ease;
+    z-index: 1;
+}
+
+#contact.osc-section-hover .osc-glow {
+    background: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.4) 50%, transparent 100%);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+#contact.osc-card-hover .osc-glow {
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 212, 255, 0.75) 50%, transparent 100%);
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.7), 0 0 45px rgba(139, 92, 246, 0.4);
+}
+
 .contact-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -738,6 +825,32 @@ ul {
     font-size: 0.9rem;
     color: var(--color-text-secondary);
     margin-bottom: 0.25rem;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.contact-item h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-accent), #8b5cf6);
+    transform-origin: left;
+    animation: pulseLine 2s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+
+@keyframes pulseLine {
+    0%, 100% {
+        transform: scaleX(0.3);
+        opacity: 0.4;
+    }
+    50% {
+        transform: scaleX(1);
+        opacity: 1;
+    }
 }
 
 .contact-item a {
@@ -1078,8 +1191,20 @@ ul {
 }
 
 /* ============================================
-   AI CURSOR — Blinking Terminal Cursor
-   ============================================ */
+    HIDE TEXT UNTIL TYPING STARTS
+    ============================================ */
+.looking-hidden {
+    opacity: 0;
+}
+
+.looking-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* ============================================
+    AI CURSOR — Blinking Terminal Cursor
+    ============================================ */
 .ai-cursor::after {
     content: '█';
     color: #3b82f6;
