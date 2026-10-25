@@ -16,6 +16,7 @@
 			resetThreshold: 0.975,
 			chars:
 				"アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+			charArray: null, // Precomputed for performance
 		},
 		scroll: {
 			progressBarThrottle: 100, // ms
@@ -65,6 +66,7 @@
 
 		init() {
 			this.ctx = DOM.matrixCanvas.getContext("2d");
+			CONFIG.matrix.charArray = CONFIG.matrix.chars.split("");
 			this.resize();
 			this.animate();
 		},
@@ -79,8 +81,8 @@
 
 		draw() {
 			const { ctx, columns, drops } = this;
-			const { fontSize, fadeAlpha, chars, resetThreshold } = CONFIG.matrix;
-			const charArray = chars.split("");
+			const { fontSize, fadeAlpha, resetThreshold } = CONFIG.matrix;
+			const charArray = CONFIG.matrix.charArray;
 			const canvas = DOM.matrixCanvas;
 
 			ctx.fillStyle = `rgba(15, 23, 42, ${fadeAlpha})`;
@@ -326,6 +328,16 @@
 			resizeCanvas();
 			window.addEventListener("resize", resizeCanvas);
 
+			// Останавливаем RAF при уходе мыши с карточки
+			card.addEventListener("mouseleave", () => {
+				if (animationFrameId) {
+					cancelAnimationFrame(animationFrameId);
+					animationFrameId = null;
+				}
+				bolts = [];
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+			});
+
 			// Генерация геометрии молнии
 			const createSegments = (x1, y1, x2, y2, displace, depth = 0) => {
 				const segments = [];
@@ -462,7 +474,7 @@
 					}
 				}
 
-				if (isVisible || bolts.length > 0) {
+				if (isVisible) {
 					animationFrameId = requestAnimationFrame((t) => render(t));
 				} else {
 					animationFrameId = null;
@@ -506,127 +518,57 @@
 		ScrollAnimations.init();
 		TypingEffect.init();
 		initLightning();
-		ScrollAnimations.animateTitleLines();
 		initOscilloscope();
-
-		// Recalculate matrix on resize
-		let resizeTimeout;
-		window.addEventListener("resize", () => {
-			clearTimeout(resizeTimeout);
-			resizeTimeout = setTimeout(() => MatrixRain.resize(), 150);
-		});
+		initInteractiveEffects();
 	}
 
 	/* ============================================
-       SPOTLIGHT HOVER EFFECT
+       INTERACTIVE EFFECTS (Spotlight, Decode, AI Typing, 3D Tilt)
        ============================================ */
-	document.querySelectorAll(".skill-card").forEach((card) => {
-		card.addEventListener("mousemove", (e) => {
-			const rect = card.getBoundingClientRect();
-			const x = e.clientX - rect.left;
-			const y = e.clientY - rect.top;
-
-			card.style.setProperty("--mouse-x", `${x}px`);
-			card.style.setProperty("--mouse-y", `${y}px`);
+	function initInteractiveEffects() {
+		// 1. Spotlight Hover на карточках навыков
+		DOM.skillCards.forEach((card) => {
+			card.addEventListener("mousemove", (e) => {
+				const rect = card.getBoundingClientRect();
+				card.style.setProperty("--mouse-x", `${e.clientX - rect.left}px`);
+				card.style.setProperty("--mouse-y", `${e.clientY - rect.top}px`);
+			});
 		});
-	});
 
-	/* ============================================
-       AI DECODING TEXT EFFECT
-       ============================================ */
-	const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
-
-	document.querySelectorAll(".skill-list li").forEach((li) => {
-		li.dataset.value = li.textContent;
-
-		li.addEventListener("mouseenter", (e) => {
-			let iteration = 0;
+		// 2. AI Decoding Text
+		const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
+		DOM.skillCards.forEach((card) => {
+			const li = card.querySelector(".skill-name");
+			if (!li) return;
+			li.dataset.value = li.textContent;
 			let interval = null;
 
-			clearInterval(interval);
-
-			interval = setInterval(() => {
-				e.target.textContent = e.target.textContent
-					.split("")
-					.map((_letter, index) => {
-						if (index < iteration) {
-							return e.target.dataset.value[index];
-						}
-						return letters[Math.floor(Math.random() * letters.length)];
-					})
-					.join("");
-
-				if (iteration >= e.target.dataset.value.length) {
-					clearInterval(interval);
-				}
-				iteration += 1 / 2;
-			}, 30);
-		});
-	});
-
-	/* ============================================
-       AI CURSOR — Typing Effect for "Looking For"
-       ============================================ */
-	document.addEventListener("DOMContentLoaded", () => {
-		const lookingSection = document.querySelector("#looking-for");
-		const lookingTexts = document.querySelectorAll("#looking-for .about-text");
-
-		if (lookingSection && lookingTexts.length > 0) {
-			const originalTexts = Array.from(lookingTexts).map((p) => {
-				const text = p.textContent.trim();
-				p.textContent = "";
-				return text;
+			card.addEventListener("mouseenter", (e) => {
+				let iteration = 0;
+				clearInterval(interval);
+				interval = setInterval(() => {
+					e.target.textContent = e.target.dataset.value
+						.split("")
+						.map((_letter, index) => {
+							if (index < iteration) return e.target.dataset.value[index];
+							return letters[Math.floor(Math.random() * letters.length)];
+						})
+						.join("");
+					if (iteration >= e.target.dataset.value.length) {
+						clearInterval(interval);
+					}
+					iteration += 0.5;
+				}, 30);
 			});
+		});
 
-			let isTypingStarted = false;
+		// 3. Универсальная AI-печать для секций
+		const setupAiTyping = (sectionSelector, speed, threshold) => {
+			const section = document.querySelector(sectionSelector);
+			const texts = document.querySelectorAll(`${sectionSelector} .about-text`);
+			if (!section || texts.length === 0) return;
 
-			const typeWriter = (element, text, speed, callback) => {
-				let i = 0;
-				element.classList.add("ai-cursor");
-
-				const typing = setInterval(() => {
-					if (i < text.length) {
-						element.textContent += text.charAt(i);
-						i++;
-					} else {
-						clearInterval(typing);
-						element.classList.remove("ai-cursor");
-						if (callback) callback();
-					}
-				}, speed);
-			};
-
-			const observer = new IntersectionObserver(
-				(entries) => {
-					if (entries[0].isIntersecting && !isTypingStarted) {
-						isTypingStarted = true;
-
-						typeWriter(lookingTexts[0], originalTexts[0], 15, () => {
-							lookingTexts[0].classList.add("ai-cursor");
-						});
-					}
-				},
-				{
-					threshold: CONFIG.animations.lookingObserverThreshold,
-					rootMargin: CONFIG.animations.lookingObserverMargin,
-				},
-			);
-
-			observer.observe(lookingSection);
-		}
-	});
-
-	/* ============================================
-       AI CURSOR — Typing Effect for "About Me"
-       ============================================ */
-	document.addEventListener("DOMContentLoaded", () => {
-		const aboutSection = document.querySelector("#about");
-		const aboutTexts = aboutSection
-			? aboutSection.querySelectorAll(".about-text")
-			: [];
-
-		if (aboutSection && aboutTexts.length > 0) {
-			const originalTexts = Array.from(aboutTexts).map((p) => {
+			const originalTexts = Array.from(texts).map((p) => {
 				const text = p.textContent.trim();
 				p.textContent = "";
 				return text;
@@ -634,14 +576,18 @@
 
 			// Restore text before printing so the printed page has content
 			window.addEventListener("beforeprint", () => {
-				aboutTexts.forEach((p, i) => {
+				texts.forEach((p, i) => {
 					if (i < originalTexts.length) p.textContent = originalTexts[i];
 				});
 			});
 
-			let isTypingStarted = false;
-
-			const typeWriter = (element, text, speed, callback) => {
+			const typeWriter = (index) => {
+				if (index >= texts.length) {
+					texts[texts.length - 1].classList.add("ai-cursor");
+					return;
+				}
+				const element = texts[index];
+				const text = originalTexts[index];
 				let i = 0;
 				element.classList.add("ai-cursor");
 
@@ -652,53 +598,41 @@
 					} else {
 						clearInterval(typing);
 						element.classList.remove("ai-cursor");
-						if (callback) callback();
+						typeWriter(index + 1);
 					}
 				}, speed);
 			};
 
+			let isTypingStarted = false;
 			const observer = new IntersectionObserver(
 				(entries) => {
 					if (entries[0].isIntersecting && !isTypingStarted) {
 						isTypingStarted = true;
-
-						typeWriter(aboutTexts[0], originalTexts[0], 10, () => {
-							if (aboutTexts[1]) {
-								typeWriter(aboutTexts[1], originalTexts[1], 10, () => {
-									if (aboutTexts[2]) {
-										typeWriter(aboutTexts[2], originalTexts[2], 10, () => {
-											aboutTexts[2].classList.add("ai-cursor");
-										});
-									}
-								});
-							}
-						});
+						typeWriter(0);
+						observer.disconnect();
 					}
 				},
-				{ threshold: 0.4 },
+				{ threshold },
 			);
 
-			observer.observe(aboutSection);
-		}
-	});
+			observer.observe(section);
+		};
 
-	/* ============================================
-       3D TILT — Education Card
-       ============================================ */
-	document.addEventListener("DOMContentLoaded", () => {
+		setupAiTyping("#about", 10, 0.4);
+		setupAiTyping(
+			"#looking-for",
+			15,
+			CONFIG.animations.lookingObserverThreshold,
+		);
+
+		// 4. 3D Tilt для карточки образования
 		const eduCard = document.querySelector(".education-card");
-
 		if (eduCard) {
 			eduCard.addEventListener("mousemove", (e) => {
 				const rect = eduCard.getBoundingClientRect();
-				const x = e.clientX - rect.left;
-				const y = e.clientY - rect.top;
-
-				const centerX = rect.width / 2;
-				const centerY = rect.height / 2;
-
-				const rotateX = ((y - centerY) / centerY) * -10;
-				const rotateY = ((x - centerX) / centerX) * 10;
+				const rotateX =
+					((e.clientY - rect.height / 2) / (rect.height / 2)) * -10;
+				const rotateY = ((e.clientX - rect.width / 2) / (rect.width / 2)) * 10;
 
 				eduCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
 			});
@@ -714,37 +648,26 @@
 				eduCard.style.transition = "none";
 			});
 		}
-	});
 
-	/* ============================================
-        STAGGER ANIMATION — Contact Cards
-        ============================================ */
-	document.addEventListener("DOMContentLoaded", () => {
-		const contactItems = document.querySelectorAll(".contact-item");
-
-		if (contactItems.length > 0) {
-			const contactObserver = new IntersectionObserver(
-				(entries, observer) => {
-					entries.forEach((entry) => {
-						if (entry.isIntersecting) {
-							contactItems.forEach((item, index) => {
-								setTimeout(() => {
-									item.classList.add("visible");
-								}, index * 150);
-							});
-							observer.disconnect();
-						}
-					});
-				},
-				{ threshold: 0.2 },
-			);
-
+		// 5. Каскадное появление контактов
+		if (DOM.contactItems.length > 0) {
 			const contactSection = document.querySelector("#contact");
 			if (contactSection) {
+				const contactObserver = new IntersectionObserver(
+					(entries, obs) => {
+						if (entries[0].isIntersecting) {
+							DOM.contactItems.forEach((item, index) => {
+								setTimeout(() => item.classList.add("visible"), index * 150);
+							});
+							obs.disconnect();
+						}
+					},
+					{ threshold: 0.2 },
+				);
 				contactObserver.observe(contactSection);
 			}
 		}
-	});
+	}
 
 	/* ============================================
        REALTIME OSCILLOSCOPE — 3-Stage Reactive Signal
