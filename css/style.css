@@ -908,6 +908,12 @@ ul {
 	transform-origin: left;
 	animation: pulseLine 2s ease-in-out infinite;
 	box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+	/* Оптимизация: анимация запускается только когда секция на экране */
+	animation-play-state: paused;
+}
+
+#contact.contact-section-visible .contact-item h3::after {
+	animation-play-state: running;
 }
 
 @keyframes pulseLine {
