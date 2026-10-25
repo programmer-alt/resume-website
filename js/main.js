@@ -856,12 +856,16 @@
 				if (entries[0].isIntersecting) {
 					isVisible = true;
 					if (!animId) render();
+					// Запускаем анимацию pulseLine на карточках контактов
+					contactSection.classList.add("contact-section-visible");
 				} else {
 					isVisible = false;
 					if (animId) {
 						cancelAnimationFrame(animId);
 						animId = null;
 					}
+					// Останавливаем анимацию pulseLine
+					contactSection.classList.remove("contact-section-visible");
 				}
 			},
 			{ threshold: 0.05 },
