@@ -284,17 +284,6 @@ ul {
 	transform: translateY(-2px);
 }
 
-.btn-pdf {
-	background: #ef4444;
-	color: white;
-}
-
-.btn-pdf:hover {
-	background: #dc2626;
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-
 .hero-social {
 	display: flex;
 	gap: 15px;
@@ -493,51 +482,6 @@ ul {
 
 .skill-list li:last-child {
 	border-bottom: none;
-}
-
-/* ============================================
-   EXPERIENCE
-   ============================================ */
-.timeline {
-	max-width: 800px;
-}
-
-.timeline-item {
-	display: flex;
-	gap: 30px;
-	margin-bottom: 40px;
-	padding: 25px;
-	background: var(--color-bg-card);
-	border-radius: var(--border-radius);
-}
-
-.timeline-date {
-	flex-shrink: 0;
-	width: 140px;
-	color: var(--color-accent);
-	font-weight: 600;
-	font-size: 14px;
-}
-
-.timeline-title {
-	font-size: 20px;
-	margin-bottom: 5px;
-}
-
-.timeline-role {
-	color: var(--color-accent);
-	margin-bottom: 10px;
-	font-weight: 500;
-}
-
-.timeline-description {
-	list-style: disc;
-	padding-left: 20px;
-	color: var(--color-text-secondary);
-}
-
-.timeline-description li {
-	margin-bottom: 5px;
 }
 
 /* ============================================
@@ -1127,11 +1071,6 @@ ul {
 		grid-template-columns: 1fr;
 	}
 
-	.timeline-item {
-		flex-direction: column;
-		gap: 15px;
-	}
-
 	.about-facts {
 		flex-direction: column;
 	}
@@ -1242,8 +1181,7 @@ ul {
 		box-shadow: none !important;
 	}
 
-	.skill-list li,
-	.timeline-description li {
+	.skill-list li {
 		color: #374151 !important;
 	}
 
@@ -1266,18 +1204,6 @@ ul {
 		animation: none !important;
 		transition: none !important;
 	}
-}
-
-/* ============================================
-    HIDE TEXT UNTIL TYPING STARTS
-    ============================================ */
-.looking-hidden {
-	opacity: 0;
-}
-
-.looking-visible {
-	opacity: 1;
-	transition: opacity 0.3s ease;
 }
 
 /* ============================================
