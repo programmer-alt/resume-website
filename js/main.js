@@ -6,8 +6,15 @@
  */
 (() => {
 	/* ============================================
-       CONFIGURATION
-       ============================================ */
+        REDUCED MOTION — системная настройка пользователя
+        ============================================ */
+	const prefersReducedMotion = window.matchMedia(
+		"(prefers-reduced-motion: reduce)",
+	).matches;
+
+	/* ============================================
+        CONFIGURATION
+        ============================================ */
 	const CONFIG = {
 		matrix: {
 			fontSize: 14,
@@ -54,21 +61,98 @@
 	}
 
 	/* ============================================
-       MATRIX RAIN EFFECT
-       ============================================ */
+        UNIFIED ANIMATION LOOP — один RAF для всех эффектов
+        ============================================ */
+	let animationIndex = 0;
+
+	const AnimationLoop = {
+		rafId: null,
+		running: false,
+		drivers: [], // [{ draw(timestamp), enabled: bool }]
+
+		start() {
+			if (this.running) return;
+			this.running = true;
+			this.tick = this.tick.bind(this);
+			this.tick(0);
+		},
+
+		stop() {
+			this.running = false;
+			if (this.rafId) {
+				cancelAnimationFrame(this.rafId);
+				this.rafId = null;
+			}
+		},
+
+		tick(timestamp) {
+			if (!this.running) return;
+
+			for (const driver of this.drivers) {
+				if (driver.enabled) {
+					driver.draw(timestamp);
+				}
+			}
+
+			this.rafId = requestAnimationFrame(this.tick);
+		},
+
+		// Возвращает индекс зарегистрированного драйвера
+		register(drawFn) {
+			const idx = animationIndex++;
+			this.drivers.push({ draw: drawFn, enabled: true });
+			return idx;
+		},
+
+		disable(idx) {
+			if (this.drivers[idx]) {
+				this.drivers[idx].enabled = false;
+			}
+		},
+	};
+
+	/* ============================================
+        MATRIX RAIN EFFECT
+        ============================================ */
 	const MatrixRain = {
 		ctx: null,
 		columns: 0,
 		drops: [],
 		lastTime: 0,
-		running: true,
-		animationId: null,
+		loopIdx: null,
+		observer: null,
 
 		init() {
 			this.ctx = DOM.matrixCanvas.getContext("2d");
 			CONFIG.matrix.charArray = CONFIG.matrix.chars.split("");
 			this.resize();
-			this.animate();
+			this.loopIdx = AnimationLoop.register((timestamp) =>
+				this.draw(timestamp),
+			);
+
+			// Останавливаем анимацию когда hero не виден
+			this.observer = new IntersectionObserver(
+				(entries) => {
+					if (entries[0].isIntersecting) {
+						// Hero на экране — включаем рисование
+						if (this.loopIdx !== null) {
+							AnimationLoop.disable(this.loopIdx);
+							this.loopIdx = AnimationLoop.register((timestamp) =>
+								this.draw(timestamp),
+							);
+						}
+					} else {
+						// Hero ушёл — отключаем
+						if (this.loopIdx !== null) {
+							AnimationLoop.disable(this.loopIdx);
+							this.loopIdx = null;
+						}
+					}
+				},
+				{ threshold: 0.1 },
+			);
+
+			this.observer.observe(DOM.heroSection);
 		},
 
 		resize() {
@@ -79,11 +163,15 @@
 			this.drops = Array(this.columns).fill(1);
 		},
 
-		draw() {
+		draw(timestamp) {
 			const { ctx, columns, drops } = this;
 			const { fontSize, fadeAlpha, resetThreshold } = CONFIG.matrix;
 			const charArray = CONFIG.matrix.charArray;
 			const canvas = DOM.matrixCanvas;
+
+			// Throttle: рисуем не чаще чем раз в CONFIG.matrix.refreshInterval
+			if (timestamp - this.lastTime < CONFIG.matrix.refreshInterval) return;
+			this.lastTime = timestamp;
 
 			ctx.fillStyle = `rgba(15, 23, 42, ${fadeAlpha})`;
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -113,21 +201,13 @@
 			}
 		},
 
-		animate(timestamp) {
-			if (!this.running) return;
-
-			if (timestamp - this.lastTime >= CONFIG.matrix.refreshInterval) {
-				this.draw();
-				this.lastTime = timestamp;
-			}
-
-			this.animationId = requestAnimationFrame((ts) => this.animate(ts));
-		},
-
 		destroy() {
-			this.running = false;
-			if (this.animationId) {
-				cancelAnimationFrame(this.animationId);
+			if (this.loopIdx !== null) {
+				AnimationLoop.disable(this.loopIdx);
+				this.loopIdx = null;
+			}
+			if (this.observer) {
+				this.observer.disconnect();
 			}
 		},
 	};
@@ -303,10 +383,11 @@
 	};
 
 	/* ============================================
-       LIGHTNING CANVAS EFFECT — High-Voltage Arc Physics
-       ============================================ */
+        LIGHTNING CANVAS EFFECT — High-Voltage Arc Physics
+        ============================================ */
 	function initLightning() {
 		const cards = document.querySelectorAll(".project-card[data-lightning]");
+		const resizeHandlers = []; // Храним handlers для cleanup
 
 		cards.forEach((card) => {
 			const canvas = card.querySelector(".lightning-canvas");
@@ -314,9 +395,9 @@
 			const ctx = canvas.getContext("2d");
 
 			let isVisible = false;
-			let animationFrameId = null;
 			let lastBoltTime = 0;
-			const boltInterval = 120; // мс между молниями (одинаково на всех устройствах)
+			let loopIdx = null;
+			const boltInterval = 120;
 			const padding = 35;
 			let bolts = [];
 
@@ -325,18 +406,11 @@
 				canvas.height = card.clientHeight + padding * 2;
 			};
 
-			resizeCanvas();
+			// Сохраняем handler для последующего удаления
+			resizeHandlers.push({ card, handler: resizeCanvas });
 			window.addEventListener("resize", resizeCanvas);
 
-			// Останавливаем RAF при уходе мыши с карточки
-			card.addEventListener("mouseleave", () => {
-				if (animationFrameId) {
-					cancelAnimationFrame(animationFrameId);
-					animationFrameId = null;
-				}
-				bolts = [];
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-			});
+			resizeCanvas(); // Initial resize
 
 			// Генерация геометрии молнии
 			const createSegments = (x1, y1, x2, y2, displace, depth = 0) => {
@@ -356,7 +430,6 @@
 					...createSegments(midX, midY, x2, y2, displace / 1.8, depth),
 				);
 
-				// Боковые отростки
 				if (depth < 2 && Math.random() < 0.45 && displace > 10) {
 					const angle =
 						Math.atan2(y2 - y1, x2 - x1) +
@@ -372,7 +445,6 @@
 				return segments;
 			};
 
-			// Координаты периметра рамки
 			const getPerimeterPoint = (dist, w, h) => {
 				const perimeter = 2 * (w + h);
 				let d = ((dist % perimeter) + perimeter) % perimeter;
@@ -385,7 +457,6 @@
 				return { x: padding, y: padding + h - d };
 			};
 
-			// Спавн нового разряда
 			const spawnBolt = () => {
 				const w = canvas.width - padding * 2;
 				const h = canvas.height - padding * 2;
@@ -409,12 +480,14 @@
 				});
 			};
 
-			const render = (timestamp = 0) => {
+			// Единый RAF-цикл — регистрация
+			const draw = (timestamp) => {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-				// Молнии спавнятся по таймеру (не по кадрам) — одинаково на всех устройствах
+				if (!isVisible) return;
+
+				// Спавн молний по таймеру, не по кадрам
 				if (
-					isVisible &&
 					bolts.length < 3 &&
 					timestamp - lastBoltTime > boltInterval &&
 					Math.random() < 0.4
@@ -428,7 +501,6 @@
 					const bolt = bolts[i];
 					ctx.save();
 
-					// 1. НАГРЕВ РАМКИ (Точки входа и выхода тока)
 					ctx.beginPath();
 					ctx.arc(bolt.p1.x, bolt.p1.y, 2.5, 0, Math.PI * 2);
 					ctx.arc(bolt.p2.x, bolt.p2.y, 2.5, 0, Math.PI * 2);
@@ -444,7 +516,6 @@
 					ctx.shadowBlur = 25;
 					ctx.fill();
 
-					// 2. Внешнее свечение дуги
 					ctx.beginPath();
 					for (const seg of bolt.segments) {
 						ctx.moveTo(seg.x1, seg.y1);
@@ -455,7 +526,6 @@
 					ctx.shadowBlur = 15;
 					ctx.stroke();
 
-					// 3. Белое тонкое ядро молнии
 					ctx.beginPath();
 					for (const seg of bolt.segments) {
 						ctx.moveTo(seg.x1, seg.y1);
@@ -473,15 +543,9 @@
 						bolts.splice(i, 1);
 					}
 				}
-
-				if (isVisible) {
-					animationFrameId = requestAnimationFrame((t) => render(t));
-				} else {
-					animationFrameId = null;
-				}
 			};
 
-			// IntersectionObserver — отслеживаем видимость карточки в viewport
+			// IntersectionObserver — включаем/отключаем драйвер в едином цикле
 			const observer = new IntersectionObserver(
 				(entries) => {
 					entries.forEach((entry) => {
@@ -489,13 +553,17 @@
 							isVisible = true;
 							resizeCanvas();
 							spawnBolt();
-							if (!animationFrameId) render(0);
+							// Включаем рисование в едином цикле
+							if (loopIdx === null) {
+								loopIdx = AnimationLoop.register(draw);
+							}
 						} else {
 							isVisible = false;
-							bolts = []; // Очищаем молнии когда карточка не видна
-							if (animationFrameId) {
-								cancelAnimationFrame(animationFrameId);
-								animationFrameId = null;
+							bolts = [];
+							// Отключаем рисование
+							if (loopIdx !== null) {
+								AnimationLoop.disable(loopIdx);
+								loopIdx = null;
 							}
 						}
 					});
@@ -505,20 +573,44 @@
 
 			observer.observe(card);
 		});
+
+		// Возвращаем функцию для cleanup
+		return () => {
+			resizeHandlers.forEach(({ handler }) => {
+				window.removeEventListener("resize", handler);
+			});
+		};
 	}
 
 	/* ============================================
-       INITIALIZATION
-       ============================================ */
+        INITIALIZATION
+        ============================================ */
 	function init() {
 		cacheDOMElements();
 
-		MatrixRain.init();
+		// Запускаем единый RAF-цикл ОДИН РАЗ
+		AnimationLoop.start();
+
+		// Matrix Rain — Canvas анимация, тяжёлая для слабых устройств
+		if (!prefersReducedMotion) {
+			MatrixRain.init();
+		}
+
 		ScrollProgress.init();
 		ScrollAnimations.init();
 		TypingEffect.init();
-		initLightning();
-		initOscilloscope();
+
+		// Lightning — Canvas молнии на карточках
+		if (!prefersReducedMotion) {
+			lightningCleanup = initLightning();
+		}
+
+		// Oscilloscope — SVG анимация осциллографа
+		oscilloscopeCleanup = initOscilloscope();
+
+		// Каскадное появление контактов
+		initContactCascade();
+
 		initInteractiveEffects();
 	}
 
@@ -526,6 +618,49 @@
        INTERACTIVE EFFECTS (Spotlight, Decode, AI Typing, 3D Tilt)
        ============================================ */
 	function initInteractiveEffects() {
+		/* ============================================
+        SECTION TITLES — AI Decoding on Scroll
+        ============================================ */
+		const sectionDecodeLetters =
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*<>[]{}!@#";
+		const sectionDecodeObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && !entry.target.dataset.decoded) {
+						entry.target.dataset.decoded = "true";
+						const title = entry.target.querySelector(".section-title");
+						if (!title) return;
+
+						const originalText = title.textContent.trim();
+						title.dataset.value = originalText;
+						title.textContent = "";
+
+						let iteration = 0;
+						const interval = setInterval(() => {
+							title.textContent = originalText
+								.split("")
+								.map((_char, index) => {
+									if (index < iteration) return originalText[index];
+									return sectionDecodeLetters[
+										Math.floor(Math.random() * sectionDecodeLetters.length)
+									];
+								})
+								.join("");
+							if (iteration >= originalText.length) {
+								clearInterval(interval);
+							}
+							iteration += 0.3;
+						}, 40);
+					}
+				});
+			},
+			{ threshold: 0.6 },
+		);
+
+		DOM.sections.forEach((section) => {
+			sectionDecodeObserver.observe(section);
+		});
+
 		// 1. Spotlight Hover на карточках навыков
 		DOM.skillCards.forEach((card) => {
 			card.addEventListener("mousemove", (e) => {
@@ -574,8 +709,16 @@
 				return text;
 			});
 
-			// Restore text before printing so the printed page has content
+			// Храним active интервалы для остановки при печати
+			const typingIntervals = [];
+
+			// Restore text before printing — останавливаем AI-печать
 			window.addEventListener("beforeprint", () => {
+				// Останавливаем все active typing intervals
+				for (const id of typingIntervals) {
+					clearInterval(id);
+				}
+				// Восстанавливаем полный текст
 				texts.forEach((p, i) => {
 					if (i < originalTexts.length) p.textContent = originalTexts[i];
 				});
@@ -601,6 +744,9 @@
 						typeWriter(index + 1);
 					}
 				}, speed);
+
+				// Сохраняем ID интервала
+				typingIntervals.push(typing);
 			};
 
 			let isTypingStarted = false;
@@ -618,7 +764,7 @@
 			observer.observe(section);
 		};
 
-		setupAiTyping("#about", 10, 0.4);
+		setupAiTyping("#about", 10, 0.7);
 		setupAiTyping(
 			"#looking-for",
 			15,
@@ -631,8 +777,9 @@
 			eduCard.addEventListener("mousemove", (e) => {
 				const rect = eduCard.getBoundingClientRect();
 				const rotateX =
-					((e.clientY - rect.height / 2) / (rect.height / 2)) * -10;
-				const rotateY = ((e.clientX - rect.width / 2) / (rect.width / 2)) * 10;
+					((e.clientY - rect.top - rect.height / 2) / (rect.height / 2)) * -10;
+				const rotateY =
+					((e.clientX - rect.left - rect.width / 2) / (rect.width / 2)) * 10;
 
 				eduCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
 			});
@@ -648,30 +795,33 @@
 				eduCard.style.transition = "none";
 			});
 		}
-
-		// 5. Каскадное появление контактов
-		if (DOM.contactItems.length > 0) {
-			const contactSection = document.querySelector("#contact");
-			if (contactSection) {
-				const contactObserver = new IntersectionObserver(
-					(entries, obs) => {
-						if (entries[0].isIntersecting) {
-							DOM.contactItems.forEach((item, index) => {
-								setTimeout(() => item.classList.add("visible"), index * 150);
-							});
-							obs.disconnect();
-						}
-					},
-					{ threshold: 0.2 },
-				);
-				contactObserver.observe(contactSection);
-			}
-		}
 	}
 
 	/* ============================================
-       REALTIME OSCILLOSCOPE — 3-Stage Reactive Signal
-       ============================================ */
+        CONTACT CASCADE — staggered reveal
+        ============================================ */
+	function initContactCascade() {
+		if (DOM.contactItems.length === 0) return;
+		const contactSection = document.querySelector("#contact");
+		if (!contactSection) return;
+
+		const contactObserver = new IntersectionObserver(
+			(entries, obs) => {
+				if (entries[0].isIntersecting) {
+					DOM.contactItems.forEach((item, index) => {
+						setTimeout(() => item.classList.add("visible"), index * 150);
+					});
+					obs.disconnect();
+				}
+			},
+			{ threshold: 0.2 },
+		);
+		contactObserver.observe(contactSection);
+	}
+
+	/* ============================================
+        REALTIME OSCILLOSCOPE — 3-Stage Reactive Signal
+        ============================================ */
 	function initOscilloscope() {
 		const contactSection = document.getElementById("contact");
 		const mainPath = document.getElementById("oscPathMain");
@@ -684,30 +834,25 @@
 		const height = 80;
 		const baseY = height / 2;
 
-		// Пресеты состояний: Покой -> Наведение на блок -> Наведение на карточку
 		const STATES = {
 			standby: { amp: 3.5, freq: 2.0, speed: 0.025 },
 			section: { amp: 12.0, freq: 4.5, speed: 0.07 },
-			card: { amp: 25.0, freq: 9.5, speed: 0.16 }, // Учащенный импульс
+			card: { amp: 25.0, freq: 9.5, speed: 0.16 },
 		};
 
 		const current = { ...STATES.standby };
 		let target = { ...STATES.standby };
 		let phase = 0;
-		let isVisible = false;
-		let animId = null;
+		let loopIdx = null;
 
-		// Построение кривой с затуханием к краям (огибающая)
 		const buildWavePath = (amp, freq, phaseOffset, harmonicMult) => {
 			const step = 4;
 			let d = `M 0,${baseY}`;
 
 			for (let x = step; x <= width; x += step) {
 				const normX = x / width;
-				// Огибающая: края (0% и 100%) всегда сведены в 0, пик в центре
 				const envelope = Math.sin(normX * Math.PI) ** 1.6;
 
-				// Наложение двух частот для реалистичного радиосигнала
 				const w1 = Math.sin(normX * Math.PI * 2 * freq - phaseOffset);
 				const w2 =
 					Math.sin(
@@ -720,8 +865,8 @@
 			return d;
 		};
 
-		const render = () => {
-			// Плавное физическое ускорение/замедление параметров (LERP)
+		// Единый RAF-цикл — рисование осциллографа
+		const draw = () => {
 			current.amp += (target.amp - current.amp) * 0.08;
 			current.freq += (target.freq - current.freq) * 0.06;
 			current.speed += (target.speed - current.speed) * 0.08;
@@ -741,15 +886,8 @@
 					1.5,
 				),
 			);
-
-			if (isVisible) {
-				animId = requestAnimationFrame(render);
-			} else {
-				animId = null;
-			}
 		};
 
-		// 1. Наведение на секцию Контакты
 		contactSection.addEventListener("mouseenter", () => {
 			target = { ...STATES.section };
 			contactSection.classList.add("osc-section-hover");
@@ -760,7 +898,6 @@
 			contactSection.classList.remove("osc-section-hover", "osc-card-hover");
 		});
 
-		// 2. Наведение на карточки контактов (Email, GitHub, Telegram) — учащение сигнала
 		contactCards.forEach((card) => {
 			card.addEventListener("mouseenter", () => {
 				target = { ...STATES.card };
@@ -773,21 +910,21 @@
 			});
 		});
 
-		// Оптимизация: крутим анимацию только когда секция Контактов на экране
+		// IntersectionObserver — включаем/отключаем драйвер в едином цикле
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting) {
-					isVisible = true;
-					if (!animId) render();
-					// Запускаем анимацию pulseLine на карточках контактов
+					// Включаем рисование в едином цикле
+					if (loopIdx === null) {
+						loopIdx = AnimationLoop.register(draw);
+					}
 					contactSection.classList.add("contact-section-visible");
 				} else {
-					isVisible = false;
-					if (animId) {
-						cancelAnimationFrame(animId);
-						animId = null;
+					// Отключаем рисование
+					if (loopIdx !== null) {
+						AnimationLoop.disable(loopIdx);
+						loopIdx = null;
 					}
-					// Останавливаем анимацию pulseLine
 					contactSection.classList.remove("contact-section-visible");
 				}
 			},
@@ -795,7 +932,56 @@
 		);
 
 		observer.observe(contactSection);
+
+		// Возвращаем функцию для cleanup
+		return () => {
+			observer.disconnect();
+			contactSection.removeEventListener("mouseenter", () => {});
+			contactSection.removeEventListener("mouseleave", () => {});
+			contactCards.forEach((card) => {
+				card.removeEventListener("mouseenter", () => {});
+				card.removeEventListener("mouseleave", () => {});
+			});
+		};
 	}
+
+	// Слушаем изменение настройки в реальном времени
+	const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+	let isAnimationsEnabled = !motionQuery.matches;
+	let lightningCleanup = null;
+	let oscilloscopeCleanup = null;
+
+	// Сохраняем cleanup функции из init()
+	const _originalInit = init;
+	window.initPortfolioCleanup = () => {
+		// Возвращаем cleanup для использования в matchMedia handler
+		return {
+			matrix: () => MatrixRain.destroy(),
+			lightning: () => lightningCleanup?.(),
+			oscilloscope: () => oscilloscopeCleanup?.(),
+		};
+	};
+
+	motionQuery.addEventListener("change", (e) => {
+		const enabled = !e.matches;
+
+		if (enabled && !isAnimationsEnabled) {
+			// Включили анимации — запускаем заново
+			MatrixRain.init();
+			if (!lightningCleanup) lightningCleanup = initLightning();
+			if (!oscilloscopeCleanup) oscilloscopeCleanup = initOscilloscope();
+		} else if (!enabled && isAnimationsEnabled) {
+			// Выключили анимации — чистим всё
+			MatrixRain.destroy();
+			lightningCleanup?.();
+			oscilloscopeCleanup?.();
+			lightningCleanup = null;
+			oscilloscopeCleanup = null;
+		}
+
+		isAnimationsEnabled = enabled;
+	});
 
 	// Start when DOM is ready
 	if (document.readyState === "loading") {
