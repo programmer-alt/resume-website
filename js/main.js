@@ -98,7 +98,15 @@
 		},
 
 		// Возвращает индекс зарегистрированного драйвера
+		// Переиспользует disabled-слоты вместо бесконечного роста массива
 		register(drawFn) {
+			// Ищем первый disabled слот для переиспользования
+			const reuseIdx = this.drivers.findIndex((d) => !d.enabled);
+			if (reuseIdx !== -1) {
+				this.drivers[reuseIdx] = { draw: drawFn, enabled: true };
+				return reuseIdx;
+			}
+			// Иначе добавляем новый
 			const idx = animationIndex++;
 			this.drivers.push({ draw: drawFn, enabled: true });
 			return idx;
