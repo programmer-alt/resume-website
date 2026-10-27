@@ -41,6 +41,18 @@
 			educationCardStagger: 100,
 			contactItemStagger: 100,
 		},
+		snowfall: {
+			count: 50,
+			fps: 60,
+			minRadius: 1.5,
+			maxRadius: 4.5,
+			minSpeedY: 0.4,
+			maxSpeedY: 1.8,
+			minSpeedX: 0.15,
+			maxSpeedX: 0.6,
+			wobbleSpeed: 0.02,
+			wobbleAmplitude: 0.8,
+		},
 	};
 
 	/* ============================================
@@ -98,7 +110,15 @@
 		},
 
 		// Возвращает индекс зарегистрированного драйвера
+		// Переиспользует disabled-слоты вместо бесконечного роста массива
 		register(drawFn) {
+			// Ищем первый disabled слот для переиспользования
+			const reuseIdx = this.drivers.findIndex((d) => !d.enabled);
+			if (reuseIdx !== -1) {
+				this.drivers[reuseIdx] = { draw: drawFn, enabled: true };
+				return reuseIdx;
+			}
+			// Иначе добавляем новый
 			const idx = animationIndex++;
 			this.drivers.push({ draw: drawFn, enabled: true });
 			return idx;
@@ -213,8 +233,122 @@
 	};
 
 	/* ============================================
-       SCROLL PROGRESS BAR
-       ============================================ */
+        SNOWFALL — FrigoShop Project
+        ============================================ */
+	const Snowfall = {
+		ctx: null,
+		canvas: null,
+		snowflakes: [],
+		lastTime: 0,
+		loopIdx: null,
+		observer: null,
+		resizeHandler: null,
+
+		init() {
+			const card = document.querySelector('.project-card:has(.fa-snowflake)');
+			if (!card) return;
+			this.canvas = card.querySelector('.snowfall-canvas');
+			if (!this.canvas) return;
+
+			this.ctx = this.canvas.getContext('2d');
+
+			// Resize через frame чтобы DOM успел отрисоваться
+			requestAnimationFrame(() => {
+				const parent = this.canvas.parentElement;
+				this.canvas.width = parent.clientWidth;
+				this.canvas.height = parent.clientHeight;
+				this.createSnowflakes();
+			});
+
+			this.loopIdx = AnimationLoop.register((timestamp) => this.draw(timestamp));
+
+			this.resizeHandler = () => {
+				const parent = this.canvas.parentElement;
+				this.canvas.width = parent.clientWidth;
+				this.canvas.height = parent.clientHeight;
+			};
+			window.addEventListener('resize', this.resizeHandler);
+
+			this.observer = new IntersectionObserver((entries) => {
+				if (entries[0].isIntersecting) {
+					const parent = this.canvas.parentElement;
+					this.canvas.width = parent.clientWidth;
+					this.canvas.height = parent.clientHeight;
+					if (this.loopIdx === null) {
+						this.loopIdx = AnimationLoop.register((timestamp) => this.draw(timestamp));
+					}
+				} else {
+					if (this.loopIdx !== null) {
+						AnimationLoop.disable(this.loopIdx);
+						this.loopIdx = null;
+					}
+				}
+			}, { threshold: 0.1 });
+
+			this.observer.observe(card);
+		},
+
+		createSnowflakes() {
+			const { count, minRadius, maxRadius, minSpeedY, maxSpeedY, minSpeedX, maxSpeedX, wobbleSpeed, wobbleAmplitude } = CONFIG.snowfall;
+			const w = this.canvas.width || 320;
+			const h = this.canvas.height || 180;
+
+			this.snowflakes = Array.from({ length: count }, () => {
+				const r = minRadius + Math.random() * (maxRadius - minRadius);
+				return {
+					x: Math.random() * w,
+					y: Math.random() * h,
+					radius: r,
+					speedY: minSpeedY + Math.random() * (maxSpeedY - minSpeedY),
+					speedX: minSpeedX + Math.random() * (maxSpeedX - minSpeedX),
+					opacity: 0.3 + (r - minRadius) / (maxRadius - minRadius) * 0.6,
+					wobble: Math.random() * Math.PI * 2,
+					wobbleSpeed,
+					wobbleAmplitude,
+				};
+			});
+		},
+
+		draw(timestamp) {
+			const { ctx, snowflakes, canvas } = this;
+			if (timestamp - this.lastTime < 1000 / CONFIG.snowfall.fps) return;
+			this.lastTime = timestamp;
+			if (canvas.width === 0 || canvas.height === 0) return;
+
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			for (const f of snowflakes) {
+				f.y += f.speedY;
+				f.wobble += f.wobbleSpeed;
+				f.x += Math.sin(f.wobble) * f.wobbleAmplitude;
+
+				if (f.y > canvas.height + f.radius * 2) {
+					f.y = -f.radius * 2;
+					f.x = Math.random() * canvas.width;
+				}
+				if (f.x > canvas.width + f.radius * 2) f.x = -f.radius * 2;
+				else if (f.x < -f.radius * 2) f.x = canvas.width + f.radius * 2;
+
+				ctx.beginPath();
+				ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
+				ctx.fillStyle = `rgba(255,255,255,${f.opacity})`;
+				ctx.fill();
+			}
+		},
+
+		destroy() {
+			if (this.loopIdx !== null) {
+				AnimationLoop.disable(this.loopIdx);
+				this.loopIdx = null;
+			}
+			if (this.observer) this.observer.disconnect();
+			if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler);
+		},
+	};
+
+	/* ============================================
+        SCROLL PROGRESS BAR
+        ============================================ */
 	const ScrollProgress = {
 		throttleTimer: null,
 		isActive: false,
@@ -389,12 +523,17 @@
 		const cards = document.querySelectorAll(".project-card[data-lightning]");
 		const resizeHandlers = []; // Храним handlers для cleanup
 
+		// Mobile detection для скорости молний
+		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+		const baseDecay = isMobile ? 0.05 : 0.005;
+
 		cards.forEach((card) => {
 			const canvas = card.querySelector(".lightning-canvas");
 			if (!canvas) return;
 			const ctx = canvas.getContext("2d");
 
-			let isVisible = false;
+			const rect = card.getBoundingClientRect();
+			let isVisible = rect.top < window.innerHeight && rect.bottom > 0;
 			let lastBoltTime = 0;
 			let loopIdx = null;
 			const boltInterval = 120;
@@ -476,7 +615,7 @@
 					p2,
 					arcLength,
 					alpha: 1.0,
-					decay: 0.04 + Math.random() * 0.07,
+					decay: baseDecay + Math.random() * baseDecay * 0.5,
 				});
 			};
 
@@ -572,6 +711,12 @@
 			);
 
 			observer.observe(card);
+
+			// Если карточка уже видна — сразу спавним молнию и запускаем draw
+			if (isVisible) {
+				spawnBolt();
+				loopIdx = AnimationLoop.register(draw);
+			}
 		});
 
 		// Возвращаем функцию для cleanup
@@ -594,6 +739,11 @@
 		// Matrix Rain — Canvas анимация, тяжёлая для слабых устройств
 		if (!prefersReducedMotion) {
 			MatrixRain.init();
+		}
+
+		// Snowfall — Canvas снежинки для FrigoShop
+		if (!prefersReducedMotion) {
+			Snowfall.init();
 		}
 
 		ScrollProgress.init();
@@ -958,6 +1108,7 @@
 		// Возвращаем cleanup для использования в matchMedia handler
 		return {
 			matrix: () => MatrixRain.destroy(),
+			snowfall: () => Snowfall.destroy(),
 			lightning: () => lightningCleanup?.(),
 			oscilloscope: () => oscilloscopeCleanup?.(),
 		};
@@ -969,11 +1120,13 @@
 		if (enabled && !isAnimationsEnabled) {
 			// Включили анимации — запускаем заново
 			MatrixRain.init();
+			Snowfall.init();
 			if (!lightningCleanup) lightningCleanup = initLightning();
 			if (!oscilloscopeCleanup) oscilloscopeCleanup = initOscilloscope();
 		} else if (!enabled && isAnimationsEnabled) {
 			// Выключили анимации — чистим всё
 			MatrixRain.destroy();
+			Snowfall.destroy();
 			lightningCleanup?.();
 			oscilloscopeCleanup?.();
 			lightningCleanup = null;
