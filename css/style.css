@@ -592,6 +592,19 @@ ul {
 	z-index: 1;
 }
 
+#globe-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+}
+
+#globe-container canvas {
+	display: block;
+}
+
 .project-placeholder {
 	position: relative;
 	z-index: 2;
