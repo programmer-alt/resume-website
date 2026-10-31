@@ -187,7 +187,8 @@
                             <canvas class="lightning-canvas"></canvas>
                         </div>
                         <div class="project-image">
-                            <div class="project-placeholder">
+                            <div id="crystal-container"></div>
+                            <div class="project-placeholder" style="display:none">
                                 <i class="fas fa-gavel"></i>
                             </div>
                         </div>
@@ -220,7 +221,8 @@
                             <canvas class="lightning-canvas"></canvas>
                         </div>
                         <div class="project-image">
-                            <div class="project-placeholder">
+                            <div id="globe-container"></div>
+                            <div class="project-placeholder" style="display:none">
                                 <i class="fas fa-comments"></i>
                             </div>
                         </div>
@@ -244,7 +246,7 @@
                         </div>
                     </div>
 
-                    <!-- Проект 3: FrigoShop -->
+                    <!-- Проект 3: Payment Gateway Demo -->
                     <div class="project-card" data-lightning>
                         <div class="lightning-wrap">
                             <canvas class="lightning-canvas"></canvas>
@@ -256,15 +258,14 @@
                             </div>
                         </div>
                         <div class="project-info">
-                            <h3>FrigoShop</h3>
-                            <p>Интернет-магазин холодильников с полной интеграцией онлайн-оплаты (ЮKassa), адаптивной формой ввода карты с валидацией по алгоритму Луна и локальным эмулятором платёжного шлюза.</p>
+                            <h3>Payment Gateway Demo</h3>
+                            <p>Пет-проект демонстрационной платёжной системы с полной интеграцией онлайн-оплаты (ЮKassa) и локальным эмулятором платёжного шлюза. Каталог товаров захардкожен для демонстрации процесса оплаты.</p>
+                            <p><strong>Ключевая особенность:</strong> валидация карт по алгоритму Луна на клиенте. Клиент проверяет номер карты локально, определяет outcome (success/fail) и отправляет на сервер только cardLast4 (4 последние цифры). Полные реквизиты карт никогда не покидают браузер — PCI DSS compliant архитектура.</p>
                             <div class="project-tech">
                                 <span>React 19</span>
                                 <span>TypeScript</span>
                                 <span>Node.js</span>
                                 <span>Express.js 5</span>
-                                <span>Prisma ORM</span>
-                                <span>SQLite / PostgreSQL</span>
                                 <span>ЮKassa API</span>
                                 <span>Zod</span>
                                 <span>Vite 6</span>
@@ -378,7 +379,7 @@
 
     <footer class="footer">
         <div class="container">
-            <a href="resume.pdf" download="Karagodin_Vadim_CV.pdf" class="btn-download-cv">
+            <a href="resume/resume.pdf" download="Karagodin_Vadim_CV.pdf" class="btn-download-cv">
                 <i class="fas fa-file-pdf"></i>
                 <span>Скачать резюме в PDF</span>
             </a>
@@ -387,5 +388,10 @@
     </footer>
 
     <script src="js/main.js"></script>
+
+    <!-- Three.js CDN для голографического шара и кристалла -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/globe.js"></script>
+    <script src="js/crystal.js"></script>
 </body>
 </html>                                                                                                                                                                                                                                                                                                                                                                        
