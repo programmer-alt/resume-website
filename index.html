@@ -244,7 +244,7 @@
                         </div>
                     </div>
 
-                    <!-- Проект 3: FrigoShop -->
+                    <!-- Проект 3: Payment Gateway Demo -->
                     <div class="project-card" data-lightning>
                         <div class="lightning-wrap">
                             <canvas class="lightning-canvas"></canvas>
@@ -256,15 +256,14 @@
                             </div>
                         </div>
                         <div class="project-info">
-                            <h3>FrigoShop</h3>
-                            <p>Интернет-магазин холодильников с полной интеграцией онлайн-оплаты (ЮKassa), адаптивной формой ввода карты с валидацией по алгоритму Луна и локальным эмулятором платёжного шлюза.</p>
+                            <h3>Payment Gateway Demo</h3>
+                            <p>Пет-проект демонстрационной платёжной системы с полной интеграцией онлайн-оплаты (ЮKassa) и локальным эмулятором платёжного шлюза. Каталог товаров захардкожен для демонстрации процесса оплаты.</p>
+                            <p><strong>Ключевая особенность:</strong> валидация карт по алгоритму Луна на клиенте. Клиент проверяет номер карты локально, определяет outcome (success/fail) и отправляет на сервер только cardLast4 (4 последние цифры). Полные реквизиты карт никогда не покидают браузер — PCI DSS compliant архитектура.</p>
                             <div class="project-tech">
                                 <span>React 19</span>
                                 <span>TypeScript</span>
                                 <span>Node.js</span>
                                 <span>Express.js 5</span>
-                                <span>Prisma ORM</span>
-                                <span>SQLite / PostgreSQL</span>
                                 <span>ЮKassa API</span>
                                 <span>Zod</span>
                                 <span>Vite 6</span>
