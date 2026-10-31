@@ -1137,9 +1137,37 @@
 	});
 
 	// Start when DOM is ready
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", init);
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
 	} else {
 		init();
+	}
+
+	// ============================================
+	// Скачивание резюме — работает на iOS Safari
+	// ============================================
+	var downloadLink = document.querySelector('.btn-download-cv');
+	if (downloadLink) {
+		downloadLink.addEventListener('click', function (e) {
+			var pdfUrl = 'resume/resume.pdf';
+
+			// iOS Safari не поддерживает атрибут download
+			// Открываем PDF в новой вкладке — пользователь может сохранить вручную
+			if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+				e.preventDefault();
+				window.open(pdfUrl, '_blank');
+			}
+			// Android Chrome тоже иногда глючит с download
+			else if (/Android/.test(navigator.userAgent)) {
+				e.preventDefault();
+				var a = document.createElement('a');
+				a.href = pdfUrl;
+				a.download = 'Karagodin_Vadim_CV.pdf';
+				a.target = '_blank';
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+			}
+		});
 	}
 })();
