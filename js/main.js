@@ -526,6 +526,10 @@
 		// Mobile detection для скорости молний
 		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 		const baseDecay = isMobile ? 0.05 : 0.005;
+		const boltInterval = isMobile ? 900 : 400;
+		const boltChance = isMobile ? 0.12 : 0.2;
+		const doubleBoltChance = isMobile ? 0.05 : 0.1;
+		const maxBolts = isMobile ? 1 : 2;
 
 		cards.forEach((card) => {
 			const canvas = card.querySelector(".lightning-canvas");
@@ -536,7 +540,6 @@
 			let isVisible = rect.top < window.innerHeight && rect.bottom > 0;
 			let lastBoltTime = 0;
 			let loopIdx = null;
-			const boltInterval = 120;
 			const padding = 35;
 			let bolts = [];
 
@@ -627,13 +630,13 @@
 
 				// Спавн молний по таймеру, не по кадрам
 				if (
-					bolts.length < 3 &&
+					bolts.length < maxBolts &&
 					timestamp - lastBoltTime > boltInterval &&
-					Math.random() < 0.4
+					Math.random() < boltChance
 				) {
 					lastBoltTime = timestamp;
 					spawnBolt();
-					if (Math.random() < 0.3) spawnBolt();
+					if (Math.random() < doubleBoltChance) spawnBolt();
 				}
 
 				for (let i = bolts.length - 1; i >= 0; i--) {
