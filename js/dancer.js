@@ -16,6 +16,11 @@
     var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var isHovered = false;
 
+    // Listen for runtime changes to the reduced-motion preference
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', function (e) {
+        prefersReducedMotion = e.matches;
+    });
+
     // ============================================
     // ПРОПОРЦИИ (ключевое!)
     // Шея y=1.05, hip y=0.25
@@ -384,7 +389,7 @@
     // Анимация
     // ============================================
     var currentPoseIdx = 0;
-    var nextPoseIdx = 1;
+    var nextPoseIdx = 0;
     var isMoving = false;
     var phaseTime = 0;
     var beatClock = 0;
@@ -395,8 +400,8 @@
     var MOVE_TIME = 0.07;
 
     // Режимы: 'tecktonik' → 'killer' → 'jumpstyle' → снова tecktonik
-    var TECKTONIK_ROUNDS = 4;
-    var KILLER_ROUNDS = 4;
+    var TECKTONIK_ROUNDS = 16;
+    var KILLER_ROUNDS = 8;
     var tecktonikCounter = 0;
     var killerCounter = 0;
     var mode = 'tecktonik';
@@ -474,7 +479,7 @@
                             phaseTime = 0;
                             isMoving = false;
                             currentPoseIdx = 0;
-                            nextPoseIdx = 1;
+                            nextPoseIdx = 0;
                         }
                     } else {
                         nextPoseIdx = (nextPoseIdx + 1) % poses.length;
@@ -600,7 +605,7 @@
                             phaseTime = 0;
                             isMoving = false;
                             currentPoseIdx = 0;
-                            nextPoseIdx = 1;
+                            nextPoseIdx = 0;
                         }
                     }
                 }
@@ -682,7 +687,8 @@
     container.addEventListener('mouseleave', function () { isHovered = false; });
 
     var observer = new IntersectionObserver(function (entries) {
-        if (entries[0].isIntersecting) {
+        var latest = entries[entries.length - 1];
+        if (latest.isIntersecting) {
             if (!prefersReducedMotion) isPaused = false;
             lastTime = performance.now();
         } else {
@@ -711,6 +717,7 @@
             tecktonikCounter = 0;
             phaseTime = 0;
             isMoving = false;
+            dancerGroup.rotation.x = 0;
         },
         killer: function () {
             mode = 'killer';
@@ -718,6 +725,7 @@
             killerCounter = 0;
             phaseTime = 0;
             isMoving = false;
+            dancerGroup.rotation.x = 0;
         },
         destroy: function () {
             if (animId) cancelAnimationFrame(animId);
@@ -732,6 +740,7 @@
             headGeo.dispose(); jointGeo.dispose(); wristGeo.dispose();
             shadowGeo.dispose(); particleGeo.dispose();
             renderer.dispose();
+            window.dancerAPI = null;
         }
     };
 })();
